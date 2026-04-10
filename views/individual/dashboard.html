@@ -156,8 +156,8 @@
                             </button>
                         </div>
                         <button id="headerProfileBtn" class="ml-2 flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                            <div class="h-9 w-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">JD</div>
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block">John Doe</span>
+                            <div id="headerAvatar" class="h-9 w-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">JD</div>
+                            <span id="headerUserName" class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block">John Doe</span>
                         </button>
                     </div>
                 </div>
@@ -281,28 +281,28 @@
                 </div>
                 <div class="absolute left-1/2 bottom-[-45px] -translate-x-1/2">
                     <div class="w-24 h-24 rounded-full bg-[#1E4A7A] p-1"> 
-                         <div class="w-full h-full rounded-full bg-[#1E4A7A] flex items-center justify-center text-white text-4xl font-normal border-4 border-white dark:border-gray-800">JD</div>
+                         <div id="overlayAvatar" class="w-full h-full rounded-full bg-[#1E4A7A] flex items-center justify-center text-white text-4xl font-normal border-4 border-white dark:border-gray-800">JD</div>
                     </div>
                 </div>
             </div>
             <div class="pt-14 pb-6 px-6 text-center">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">John Doe</h2>
+                <h2 id="overlayName" class="text-xl font-bold text-gray-900 dark:text-white">John Doe</h2>
                 <div class="flex flex-col items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    
-                    <span>ID: CS2025_001</span>
+                    <span id="overlayMeta">Independent</span>
+                    <span id="overlayEmail"></span>
                 </div>
                 <div class="flex justify-between mt-6 px-2">
                     <div class="text-center">
                         <div class="text-[10px] font-bold text-[#1E4A7A] dark:text-blue-400 uppercase tracking-wide">Solved</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-white mt-1">124</div>
+                        <div id="overlaySolved" class="text-xl font-bold text-gray-900 dark:text-white mt-1">0</div>
                     </div>
                     <div class="text-center border-l border-r border-gray-100 dark:border-gray-700 px-4">
                         <div class="text-[10px] font-bold text-[#1E4A7A] dark:text-blue-400 uppercase tracking-wide">Rank</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-white mt-1">42</div>
+                        <div id="overlayRank" class="text-xl font-bold text-gray-900 dark:text-white mt-1">#-</div>
                     </div>
                     <div class="text-center">
                         <div class="text-[10px] font-bold text-[#1E4A7A] dark:text-blue-400 uppercase tracking-wide">Points</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-white mt-1">1.2k</div>
+                        <div id="overlayPoints" class="text-xl font-bold text-gray-900 dark:text-white mt-1">0</div>
                     </div>
                 </div>
                 <div class="h-px bg-gray-100 dark:bg-gray-700 my-6"></div>
@@ -636,6 +636,11 @@
                 if (d === 'medium') return 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300';
                 return 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300';
             };
+            const formatPoints = (value) => {
+                const n = Number(value || 0);
+                if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
+                return String(n);
+            };
 
             async function loadDashboardData() {
                 try {
@@ -665,15 +670,25 @@
                     if (xpProgressBar) xpProgressBar.style.width = `${Math.max(0, Math.min(100, Number(d.levelProgress || 0)))}%`;
                     if (xpToNext) xpToNext.textContent = `${Number(d.xpToNext || 0)} XP to next level`;
 
-                    const headerName = document.querySelector('#headerProfileBtn span');
-                    const headerAvatar = document.querySelector('#headerProfileBtn .h-9.w-9');
-                    const overlayName = document.querySelector('#profileOverlay h2');
-                    const overlaySolved = document.querySelector('#profileOverlay .text-center .text-xl.font-bold');
+                    const headerName = document.getElementById('headerUserName');
+                    const headerAvatar = document.getElementById('headerAvatar');
+                    const overlayName = document.getElementById('overlayName');
+                    const overlayAvatar = document.getElementById('overlayAvatar');
+                    const overlayMeta = document.getElementById('overlayMeta');
+                    const overlayEmail = document.getElementById('overlayEmail');
+                    const overlaySolved = document.getElementById('overlaySolved');
+                    const overlayRank = document.getElementById('overlayRank');
+                    const overlayPoints = document.getElementById('overlayPoints');
                     const initials = String(d.user.fullName || 'U').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || 'U';
                     if (headerName) headerName.textContent = d.user.fullName || 'Individual';
                     if (headerAvatar) headerAvatar.textContent = initials;
                     if (overlayName) overlayName.textContent = d.user.fullName || 'Individual';
+                    if (overlayAvatar) overlayAvatar.textContent = initials;
+                    if (overlayMeta) overlayMeta.textContent = 'Independent';
+                    if (overlayEmail) overlayEmail.textContent = d.user.email || '';
                     if (overlaySolved) overlaySolved.textContent = String(Number(d.user.solved || 0));
+                    if (overlayRank) overlayRank.textContent = d.user.globalRank || '#-';
+                    if (overlayPoints) overlayPoints.textContent = formatPoints(d.user.points);
 
                     if (recentProblemsList) {
                         const rows = Array.isArray(d.recentProblems) ? d.recentProblems : [];

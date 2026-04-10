@@ -141,8 +141,8 @@
             </div>
 
               <button id="headerProfileBtn" class="ml-2 flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-  <div class="h-9 w-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">JD</div>
-  <span class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block">John Doe</span>
+  <div id="headerAvatar" class="h-9 w-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">JD</div>
+  <span id="headerUserName" class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block">John Doe</span>
 </button>
             </div>
           </div>
@@ -241,7 +241,7 @@
                         <div id="sec-profile" class="mb-8">
                             <h3 class="text-lg font-bold text-gray-900 dark:text-white border-l-4 border-blue-600 dark:border-blue-400 pl-3 mb-3">1. STUDENT PROFILE</h3>
                             <table class="report-table">
-                                <tr><th class="w-1/3">Name</th><td class="font-bold text-gray-800 dark:text-white">Sample Student</td></tr>
+                                <tr><th class="w-1/3">Name</th><td id="rpName" class="font-bold text-gray-800 dark:text-white">Sample Student</td></tr>
                                 <tr><th>Roll No</th><td>CS2025_001</td></tr>
                                 <tr><th>Report Period</th><td>Last 6 Months</td></tr>
                             </table>
@@ -251,12 +251,12 @@
                             <h3 class="text-lg font-bold text-gray-900 dark:text-white border-l-4 border-blue-600 dark:border-blue-400 pl-3 mb-3">2. PERFORMANCE SUMMARY</h3>
                             <div class="grid grid-cols-2 gap-4">
                                 <table class="report-table">
-                                    <tr><th class="w-1/2">Problems Solved</th><td class="font-bold text-blue-700 dark:text-blue-400">458</td></tr>
-                                    <tr><th>Accuracy</th><td>51.4%</td></tr>
+                                    <tr><th class="w-1/2">Problems Solved</th><td id="rpSolved" class="font-bold text-blue-700 dark:text-blue-400">0</td></tr>
+                                    <tr><th>Accuracy</th><td id="rpAccuracy">0.0%</td></tr>
                                 </table>
                                 <table class="report-table">
-                                    <tr><th class="w-1/2">Global Rank</th><td class="font-bold text-gray-800 dark:text-white">#1,245</td></tr>
-                                    <tr><th>Skill Score</th><td class="font-bold text-green-600 dark:text-green-400">850</td></tr>
+                                    <tr><th class="w-1/2">Global Rank</th><td id="rpRank" class="font-bold text-gray-800 dark:text-white">#-</td></tr>
+                                    <tr><th>Skill Score</th><td id="rpScore" class="font-bold text-green-600 dark:text-green-400">0</td></tr>
                                 </table>
                             </div>
                         </div>
@@ -268,9 +268,9 @@
                                     <tr><th class="text-left">Level</th><th>Solved</th><th>Attempted</th><th>Accuracy</th></tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td class="text-left font-medium text-green-600 dark:text-green-400">Easy</td><td>250</td><td>270</td><td>92.5%</td></tr>
-                                    <tr><td class="text-left font-medium text-yellow-600 dark:text-yellow-400">Medium</td><td>158</td><td>250</td><td>63.2%</td></tr>
-                                    <tr><td class="text-left font-medium text-red-600 dark:text-red-400">Hard</td><td>50</td><td>180</td><td>27.7%</td></tr>
+                                    <tr><td class="text-left font-medium text-green-600 dark:text-green-400">Easy</td><td id="rpEasySolved">0</td><td id="rpEasyAttempted">0</td><td id="rpEasyAcc">0.0%</td></tr>
+                                    <tr><td class="text-left font-medium text-yellow-600 dark:text-yellow-400">Medium</td><td id="rpMedSolved">0</td><td id="rpMedAttempted">0</td><td id="rpMedAcc">0.0%</td></tr>
+                                    <tr><td class="text-left font-medium text-red-600 dark:text-red-400">Hard</td><td id="rpHardSolved">0</td><td id="rpHardAttempted">0</td><td id="rpHardAcc">0.0%</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -280,19 +280,11 @@
                             <div class="grid grid-cols-2 gap-x-8">
                                 <table class="report-table">
                                     <thead><tr><th>Topic</th><th>Solved</th><th>Proficiency</th></tr></thead>
-                                    <tbody>
-                                        <tr><td>Arrays</td><td>120</td><td class="text-green-600 dark:text-green-400 font-bold">Expert</td></tr>
-                                        <tr><td>Strings</td><td>85</td><td class="text-green-600 dark:text-green-400 font-bold">Expert</td></tr>
-                                        <tr><td>Linked List</td><td>45</td><td class="text-blue-600 dark:text-blue-400 font-bold">Advanced</td></tr>
-                                    </tbody>
+                                    <tbody id="rpTopicsLeft"></tbody>
                                 </table>
                                 <table class="report-table">
                                     <thead><tr><th>Topic</th><th>Solved</th><th>Proficiency</th></tr></thead>
-                                    <tbody>
-                                        <tr><td>Graphs</td><td>30</td><td class="text-yellow-600 dark:text-yellow-400 font-bold">Intermediate</td></tr>
-                                        <tr><td>Dynamic Prog.</td><td>25</td><td class="text-red-500 dark:text-red-400 font-bold">Beginner</td></tr>
-                                        <tr><td>DBMS</td><td>38</td><td class="text-green-600 dark:text-green-400 font-bold">Expert</td></tr>
-                                    </tbody>
+                                    <tbody id="rpTopicsRight"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -303,11 +295,7 @@
                                 <thead>
                                     <tr><th>Contest Name</th><th>Date</th><th>Solved</th><th>Rank</th><th>Percentile</th></tr>
                                 </thead>
-                                <tbody>
-                                    <tr><td>Weekly Challenge #42</td><td>Dec 15</td><td>4 / 5</td><td>320</td><td class="font-bold text-green-600 dark:text-green-400">92.5%</td></tr>
-                                    <tr><td>Monthly Marathon Nov</td><td>Nov 30</td><td>3 / 6</td><td>850</td><td>78.0%</td></tr>
-                                    <tr><td>Weekly Challenge #38</td><td>Nov 10</td><td>5 / 5</td><td>45</td><td class="font-bold text-green-600 dark:text-green-400">99.1%</td></tr>
-                                </tbody>
+                                <tbody id="rpContestHistory"></tbody>
                             </table>
                         </div>
 
@@ -338,27 +326,28 @@
                 </div>
                 <div class="absolute left-1/2 bottom-[-45px] -translate-x-1/2">
                     <div class="w-24 h-24 rounded-full bg-[#1E4A7A] p-1"> 
-                         <div class="w-full h-full rounded-full bg-[#1E4A7A] flex items-center justify-center text-white text-4xl font-normal border-4 border-white dark:border-gray-800">JD</div>
+                         <div id="overlayAvatar" class="w-full h-full rounded-full bg-[#1E4A7A] flex items-center justify-center text-white text-4xl font-normal border-4 border-white dark:border-gray-800">JD</div>
                     </div>
                 </div>
             </div>
             <div class="pt-14 pb-6 px-6 text-center">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">John Doe</h2>
+                <h2 id="overlayName" class="text-xl font-bold text-gray-900 dark:text-white">John Doe</h2>
                 <div class="flex flex-col items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    <span>ID: CS2025_001</span>
+                    <span id="overlayMeta">Independent</span>
+                    <span id="overlayEmail"></span>
                 </div>
                 <div class="flex justify-between mt-6 px-2">
                     <div class="text-center">
                         <div class="text-[10px] font-bold text-[#1E4A7A] dark:text-blue-400 uppercase tracking-wide">Solved</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-white mt-1">124</div>
+                        <div id="overlaySolved" class="text-xl font-bold text-gray-900 dark:text-white mt-1">0</div>
                     </div>
                     <div class="text-center border-l border-r border-gray-100 dark:border-gray-700 px-4">
                         <div class="text-[10px] font-bold text-[#1E4A7A] dark:text-blue-400 uppercase tracking-wide">Rank</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-white mt-1">42</div>
+                        <div id="overlayRank" class="text-xl font-bold text-gray-900 dark:text-white mt-1">#-</div>
                     </div>
                     <div class="text-center">
                         <div class="text-[10px] font-bold text-[#1E4A7A] dark:text-blue-400 uppercase tracking-wide">Points</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-white mt-1">1.2k</div>
+                        <div id="overlayPoints" class="text-xl font-bold text-gray-900 dark:text-white mt-1">0</div>
                     </div>
                 </div>
                 <div class="h-px bg-gray-100 dark:bg-gray-700 my-6"></div>
@@ -395,6 +384,96 @@
     <script>
       // 1. Set Date
       document.getElementById('reportDate').textContent = new Date().toLocaleDateString();
+
+      const formatPoints = (value) => {
+        const n = Number(value || 0);
+        if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
+        return String(n);
+      };
+      const pct = (num, den) => den ? `${((num / den) * 100).toFixed(1)}%` : '0.0%';
+      const proficiency = (solved) => {
+        const n = Number(solved || 0);
+        if (n >= 50) return 'Expert';
+        if (n >= 25) return 'Advanced';
+        if (n >= 10) return 'Intermediate';
+        return 'Beginner';
+      };
+
+      async function loadIndividualReportData() {
+        try {
+          const resp = await fetch('/individual/api/report-data');
+          const json = await resp.json();
+          if (!json.success || !json.report) return;
+          const r = json.report;
+          const initials = String(r.user.fullName || 'U').split(' ').filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase() || 'U';
+
+          const set = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+          };
+
+          set('reportDate', r.generatedAt || new Date().toLocaleDateString());
+          set('rpName', r.user.fullName || 'Individual');
+          set('rpSolved', String(Number(r.user.solved || 0)));
+          set('rpAccuracy', `${r.summary.accuracy}%`);
+          set('rpRank', r.user.rank || '#-');
+          set('rpScore', String(Number(r.user.points || 0)));
+
+          const easy = r.byDifficulty?.easy || { solved: 0, attempted: 0 };
+          const med = r.byDifficulty?.medium || { solved: 0, attempted: 0 };
+          const hard = r.byDifficulty?.hard || { solved: 0, attempted: 0 };
+          set('rpEasySolved', String(easy.solved));
+          set('rpEasyAttempted', String(easy.attempted));
+          set('rpEasyAcc', pct(easy.solved, easy.attempted));
+          set('rpMedSolved', String(med.solved));
+          set('rpMedAttempted', String(med.attempted));
+          set('rpMedAcc', pct(med.solved, med.attempted));
+          set('rpHardSolved', String(hard.solved));
+          set('rpHardAttempted', String(hard.attempted));
+          set('rpHardAcc', pct(hard.solved, hard.attempted));
+
+          const topics = Array.isArray(r.topics) ? r.topics : [];
+          const left = topics.slice(0, 3);
+          const right = topics.slice(3, 6);
+          const renderTopicRows = (arr) => arr.length ? arr.map((t) => `
+            <tr><td>${t.topic}</td><td>${Number(t.solved || 0)}</td><td class="text-blue-600 dark:text-blue-400 font-bold">${proficiency(t.solved)}</td></tr>
+          `).join('') : '<tr><td colspan="3">No topic data</td></tr>';
+          const leftEl = document.getElementById('rpTopicsLeft');
+          const rightEl = document.getElementById('rpTopicsRight');
+          if (leftEl) leftEl.innerHTML = renderTopicRows(left);
+          if (rightEl) rightEl.innerHTML = renderTopicRows(right);
+
+          const contests = Array.isArray(r.contests) ? r.contests : [];
+          const contestEl = document.getElementById('rpContestHistory');
+          if (contestEl) {
+            if (!contests.length) {
+              contestEl.innerHTML = '<tr><td colspan="5">No contest history</td></tr>';
+            } else {
+              contestEl.innerHTML = contests.map((c) => {
+                const percentile = c.total ? (((c.solved / c.total) * 100).toFixed(1) + '%') : '0.0%';
+                return `<tr><td>${c.title}</td><td>${c.date ? new Date(c.date).toLocaleDateString() : '-'}</td><td>${c.solved} / ${c.total}</td><td>-</td><td>${percentile}</td></tr>`;
+              }).join('');
+            }
+          }
+
+          set('headerUserName', r.user.fullName || 'Individual');
+          const headerAvatar = document.getElementById('headerAvatar');
+          if (headerAvatar) headerAvatar.textContent = initials;
+
+          set('overlayName', r.user.fullName || 'Individual');
+          set('overlayMeta', 'Independent');
+          set('overlayEmail', r.user.email || '');
+          set('overlaySolved', String(Number(r.user.solved || 0)));
+          set('overlayRank', r.user.rank || '#-');
+          set('overlayPoints', formatPoints(r.user.points));
+          const overlayAvatar = document.getElementById('overlayAvatar');
+          if (overlayAvatar) overlayAvatar.textContent = initials;
+        } catch (err) {
+          console.error('Failed to load individual report data', err);
+        }
+      }
+
+      loadIndividualReportData();
 
       // 2. Toggle Sections Logic
       function toggleSection(sectionId) {
