@@ -126,7 +126,7 @@ module.exports = (db) => {
         `;
         const params = [userId, userId];
 
-        // Student visibility rules:
+        // Student/Individual visibility rules:
         // - Global problems: visible to all
         // - College problems: visible inside same college
         // - Department problems: visible inside same college + same department
@@ -139,6 +139,11 @@ module.exports = (db) => {
                 )
             `;
             params.push(userCollege);
+        } else if (userRole === 'individual') {
+            query += `
+                AND (LOWER(COALESCE(u.role, '')) IN ('superadmin', 'admin'))
+                AND (LOWER(COALESCE(p.visibility_scope, p.scope, 'global')) = 'global')
+            `;
         }
 
         if (difficulty && difficulty !== 'all') {
@@ -185,6 +190,12 @@ module.exports = (db) => {
                 )
             `;
             params.push(userCollege);
+        } else if (userRole === 'individual') {
+            query += `
+                AND LOWER(COALESCE(p.status, '')) IN ('accepted', 'active')
+                AND (LOWER(COALESCE(u.role, '')) IN ('superadmin', 'admin'))
+                AND (LOWER(COALESCE(p.visibility_scope, p.scope, 'global')) = 'global')
+            `;
         }
 
         db.get(query, params, (err, row) => {

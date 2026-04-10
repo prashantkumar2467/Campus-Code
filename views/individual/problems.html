@@ -359,43 +359,114 @@
     </div>
 
     <script>
-      // Sample data for problems
-      const problems = [
-        { id: 1, title: "Two Sum", difficulty: "Easy", status: "solved", submissions: "12.4M", topics: ["Array", "Hash Table"] },
-        { id: 2, title: "Add Two Numbers", difficulty: "Medium", status: "attempted", submissions: "8.7M", topics: ["Linked List", "Math"] },
-        { id: 3, title: "Longest Substring Without Repeating Characters", difficulty: "Hard", status: "todo", submissions: "6.5M", topics: ["Hash Table", "Sliding Window"] },
-        { id: 4, title: "Median of Two Sorted Arrays", difficulty: "Hard", status: "todo", submissions: "4.2M", topics: ["Array", "Binary Search"] },
-        { id: 5, title: "Longest Palindromic Substring", difficulty: "Medium", status: "solved", submissions: "5.1M", topics: ["String", "DP"] },
-      ];
+      const state = {
+        allProblems: [],
+        search: "",
+        difficulty: "all"
+      };
+
+      function toTitleCase(v) {
+        const s = String(v || "");
+        return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "Easy";
+      }
+
+      function parseTags(tags) {
+        if (!tags) return [];
+        if (Array.isArray(tags)) return tags;
+        try {
+          const parsed = JSON.parse(tags);
+          if (Array.isArray(parsed)) return parsed.map((t) => String(t).trim()).filter(Boolean);
+        } catch (_) {}
+        return String(tags).split(",").map((t) => t.trim()).filter(Boolean);
+      }
+
+      function formatSubmissions(n) {
+        const v = Number(n || 0);
+        if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
+        if (v >= 1000) return `${(v / 1000).toFixed(1)}K`;
+        return String(v);
+      }
 
       function renderProblems() {
         const container = document.getElementById("problems-container");
         container.innerHTML = "";
 
-        problems.forEach((problem) => {
-          const statusColor = problem.status === "solved" ? "bg-green-500" : problem.status === "attempted" ? "bg-yellow-500" : "bg-gray-300 dark:bg-gray-600";
-          const difficultyColor = problem.difficulty === "Easy" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : problem.difficulty === "Medium" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+        const filtered = state.allProblems.filter((p) => {
+          const bySearch = !state.search || String(p.title || "").toLowerCase().includes(state.search);
+          const byDifficulty = state.difficulty === "all" || String(p.difficulty || "").toLowerCase() === state.difficulty;
+          return bySearch && byDifficulty;
+        });
 
+        if (!filtered.length) {
+          container.innerHTML = `<div class="p-6 text-sm text-gray-500 dark:text-gray-400">No global problems available right now.</div>`;
+          return;
+        }
+
+        filtered.forEach((problem) => {
+          const statusColor = Number(problem.solved || 0) > 0 ? "bg-green-500" : Number(problem.attempts || 0) > 0 ? "bg-yellow-500" : "bg-gray-300 dark:bg-gray-600";
+          const difficulty = toTitleCase(problem.difficulty);
+          const difficultyColor = difficulty === "Easy"
+            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+            : difficulty === "Medium"
+              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+              : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+          const tags = parseTags(problem.tags).slice(0, 3);
           const problemElement = document.createElement("div");
           problemElement.className = "grid grid-cols-1 md:grid-cols-12 gap-4 p-4 hover:bg-primary-50 dark:hover:bg-gray-700/50 border-b border-primary-100 dark:border-gray-700 transition-colors duration-150";
-          
           problemElement.innerHTML = `
-                <div class="col-span-1 flex items-center"><span class="w-2.5 h-2.5 ${statusColor} rounded-full"></span></div>
-                <div class="col-span-7">
-                    <a href="problem_page.html" class="font-medium text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 block transition-colors"> ${problem.id}. ${problem.title} </a>
-                    <div class="flex flex-wrap gap-2 mt-1">
-                        ${problem.topics.map((topic) => `<span class="px-2 py-0.5 text-xs rounded-full bg-primary-100 dark:bg-blue-900/30 text-primary-600 dark:text-blue-300">${topic}</span>`).join("")}
-                    </div>
-                </div>
-                <div class="col-span-2 flex items-center justify-center"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColor}">${problem.difficulty}</span></div>
-                <div class="col-span-2 flex items-center justify-end"><span class="text-sm text-primary-500 dark:text-gray-400">${problem.submissions}</span></div>
-            `;
+            <div class="col-span-1 flex items-center"><span class="w-2.5 h-2.5 ${statusColor} rounded-full"></span></div>
+            <div class="col-span-7">
+              <a href="/individual/problem/${problem.id}" class="font-medium text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 block transition-colors">${problem.id}. ${problem.title}</a>
+              <div class="flex flex-wrap gap-2 mt-1">
+                ${tags.map((topic) => `<span class="px-2 py-0.5 text-xs rounded-full bg-primary-100 dark:bg-blue-900/30 text-primary-600 dark:text-blue-300">${topic}</span>`).join("")}
+              </div>
+            </div>
+            <div class="col-span-2 flex items-center justify-center"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColor}">${difficulty}</span></div>
+            <div class="col-span-2 flex items-center justify-end"><span class="text-sm text-primary-500 dark:text-gray-400">${formatSubmissions(problem.submissions)}</span></div>
+          `;
           container.appendChild(problemElement);
         });
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
+      async function loadProblems() {
+        const resp = await fetch("/api/problems/list");
+        const data = await resp.json();
+        if (!data.success) throw new Error(data.error || "Failed to load problems");
+        state.allProblems = Array.isArray(data.problems) ? data.problems : [];
         renderProblems();
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const searchInput = document.querySelector('header input[placeholder="Search..."]');
+        if (searchInput) {
+          searchInput.addEventListener("input", (e) => {
+            state.search = String(e.target.value || "").trim().toLowerCase();
+            renderProblems();
+          });
+        }
+        const difficultyChecks = Array.from(document.querySelectorAll('h3'))
+          .find((h) => h.textContent.trim().toLowerCase() === "difficulty")
+          ?.parentElement?.querySelectorAll('input[type="checkbox"]');
+        if (difficultyChecks && difficultyChecks.length >= 3) {
+          const labels = ["easy", "medium", "hard"];
+          difficultyChecks.forEach((cb, idx) => {
+            cb.addEventListener("change", () => {
+              if (cb.checked) {
+                difficultyChecks.forEach((x, xIdx) => { if (xIdx !== idx) x.checked = false; });
+                state.difficulty = labels[idx];
+              } else {
+                state.difficulty = "all";
+              }
+              renderProblems();
+            });
+          });
+        }
+        try {
+          await loadProblems();
+        } catch (err) {
+          const container = document.getElementById("problems-container");
+          container.innerHTML = `<div class="p-6 text-sm text-red-500">${err.message}</div>`;
+        }
 
         // --- 1. SIDEBAR TOGGLE ---
         const sidebar = document.getElementById('mainSidebar');
