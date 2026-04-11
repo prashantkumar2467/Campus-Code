@@ -47,6 +47,10 @@ module.exports = (db) => {
     router.get('/profile.html', requireIndividual, (req, res) => res.redirect('/individual/profile'));
     router.get('/support', requireIndividual, serve('support.html'));
     router.get('/support.html', requireIndividual, (req, res) => res.redirect('/individual/support'));
+    router.get('/settings', requireIndividual, serve('settings.html'));
+    router.get('/settings.html', requireIndividual, (req, res) => res.redirect('/individual/settings'));
+
+
 
     // Reuse student APIs for individual users (role guard + same session context).
     router.get('/api/contests', requireIndividual, (req, res) => res.redirect(307, '/student/api/contests'));
@@ -590,5 +594,80 @@ module.exports = (db) => {
         }
     });
 
+    // 1. Fetch user data for the settings page
+    router.get('/api/settings-data', requireIndividual, async (req, res) => {
+        try {
+            const userId = Number(req.session?.user?.id);
+            if (!Number.isInteger(userId) || userId <= 0) {
+                return res.status(401).json({ success: false, error: 'Unauthorized' });
+            }
+
+            const user = await dbGet(`
+                SELECT id, fullName, email, mobile, gender, course, program, department, branch, year, section,
+                       notif_contest_alerts, notif_submission_results, notif_deadline_reminders,
+                       points, solvedCount, rank
+                FROM account_users
+                WHERE id = ?
+            `, [userId]);
+
+            if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+
+            const points = Number(user.points || 0);
+            const rankRow = await dbGet(`
+                SELECT COUNT(*) as cnt
+                FROM account_users
+                WHERE LOWER(COALESCE(role, '')) IN ('student', 'individual')
+                  AND COALESCE(points, 0) > ?
+            `, [points]);
+            user.globalRank = Number(rankRow?.cnt || 0) + 1;
+
+            return res.json({ success: true, user });
+        } catch (error) {
+            console.error('Individual settings fetch error:', error);
+            return res.status(500).json({ success: false, error: 'Failed to load settings data' });
+        }
+    });
+
+    // 2. Save updated data from the settings page
+    router.post('/api/update-profile', requireIndividual, async (req, res) => {
+        try {
+            const userId = Number(req.session?.user?.id);
+            if (!Number.isInteger(userId) || userId <= 0) {
+                return res.status(401).json({ success: false, error: 'Unauthorized' });
+            }
+
+            const {
+                fullName, email, mobile, gender,
+                course, program, department, branch, year, section,
+                notifContestAlerts, notifSubmissionResults, notifDeadlineReminders
+            } = req.body;
+
+            const updateQuery = `
+                UPDATE account_users
+                SET fullName = ?, email = ?, mobile = ?, gender = ?,
+                    course = ?, program = ?, department = ?, branch = ?, year = ?, section = ?,
+                    notif_contest_alerts = ?, notif_submission_results = ?, notif_deadline_reminders = ?
+                WHERE id = ?
+            `;
+
+            db.run(updateQuery, [
+                fullName, email, mobile, gender,
+                course, program, department, branch, year, section,
+                notifContestAlerts ? 1 : 0, notifSubmissionResults ? 1 : 0, notifDeadlineReminders ? 1 : 0,
+                userId
+            ], function(err) {
+                if (err) {
+                    console.error('Update DB error:', err);
+                    return res.status(500).json({ success: false, error: 'Failed to save changes' });
+                }
+                res.json({ success: true, message: 'Settings updated successfully' });
+            });
+        } catch (error) {
+            console.error('Profile update error:', error);
+            res.status(500).json({ success: false, error: 'Server error' });
+        }
+    });
+
     return router;
 };
+
