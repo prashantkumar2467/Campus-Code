@@ -89,16 +89,18 @@
     <div class="flex h-screen overflow-hidden">
         
         <aside id="mainSidebar" class="sidebar w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 flex flex-col h-screen flex-shrink-0 transition-colors duration-200 z-50">
-            <div class="p-6 flex-shrink-0 flex items-center justify-between h-[88px]">
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2 overflow-hidden whitespace-nowrap">
-                    <i class="fas fa-code text-primary-500 text-2xl flex-shrink-0"></i>
-                    <span class="logo-text transition-all duration-300 opacity-100 w-auto">CampusCode</span>
+           <div class="px-4 py-6 flex-shrink-0 flex items-center justify-between h-[88px]">
+                <h1
+                    class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-1 overflow-hidden whitespace-nowrap">
+                    <img src="/campuscode-logo.jpeg" alt="CampusCode Logo" class="h-12 w-12 transform scale-[1.3] flex-shrink-0 object-contain dark:invert mix-blend-multiply dark:mix-blend-normal" />
+                    
+                    <span class="logo-text transition-all duration-300 opacity-100 w-auto ml-1">CampusCode</span>
                 </h1>
-                <button id="sidebarToggleBtn" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-500 transition-colors focus:outline-none">
+                <button id="sidebarToggleBtn"
+                    class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-500 transition-colors focus:outline-none flex-shrink-0 relative z-10">
                     <i class="fas fa-chevron-left transition-transform duration-300"></i>
                 </button>
             </div>
-
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto mt-2">
                 <a href="/college/dashboard" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
                 <a href="/college/program" class="nav-item"><i class="fa-solid fa-layer-group"></i><span>Programs</span></a>
@@ -117,25 +119,39 @@
 
         <div class="flex-1 flex flex-col overflow-hidden">
             
-            <header class="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200 sticky top-0 z-40">
+           <header class="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200 sticky top-0 z-40">
                 <div class="px-8 py-3 flex justify-between items-center h-[88px]">
                     <div class="flex-1 max-w-2xl flex items-center gap-4">
+                        <div class="relative flex items-center w-full">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                            <input type="text" id="globalSearchInput"
+                                class="block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
+                                placeholder="Search across programs, branches, subjects..." />
                         </div>
+                    </div>
 
                     <div class="ml-4 flex items-center gap-3 relative">
-                        <button id="themeToggleBtn" class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none transition-transform active:scale-95">
+                        <button id="themeToggleBtn"
+                            class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none transition-transform active:scale-95">
                             <i id="themeIcon" class="fas fa-moon text-xl transition-all duration-300"></i>
                         </button>
 
                         <div class="relative">
-                            <button id="notificationBtn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
+                            <button id="notificationBtn"
+                                class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
                                 <i class="fas fa-bell text-xl"></i>
-                                <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-gray-800"></span>
+                                <span
+                                    class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-gray-800"></span>
                             </button>
-                            <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50">
-                                <div class="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                            <div id="notifDropdown"
+                                class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50">
+                                <div
+                                    class="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                                     <h3 class="font-semibold text-gray-800 dark:text-white text-sm">Notifications</h3>
-                                    <button class="text-xs text-primary-500 font-medium hover:text-primary-600">Mark all read</button>
+                                    <button class="text-xs text-primary-500 font-medium hover:text-primary-600">Mark all
+                                        read</button>
                                 </div>
                                 <div class="max-h-64 overflow-y-auto p-4 text-center text-xs text-gray-500">
                                     No new notifications
@@ -143,10 +159,16 @@
                             </div>
                         </div>
 
-                        <button onclick="toggleProfile()" class="ml-2 flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                            <div class="h-9 w-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm" id="headerInitials"></div>
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block" id="headerName"></span>
-                        </button>
+                        <div class="relative">
+                            <button onclick="toggleProfile()"
+                                class="ml-2 flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none">
+                                <div class="h-9 w-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm shadow-sm"
+                                    id="headerInitials"></div>
+                                <span
+                                    class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block truncate max-w-[150px]"
+                                    id="headerName"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -330,9 +352,9 @@
                             <button class="tab-btn w-full text-left px-4 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-3" data-target="panel-faculty">
                                 <i class="fas fa-chalkboard-teacher"></i> Faculty Preferences
                             </button>
-                            <button class="tab-btn w-full text-left px-4 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-3" data-target="panel-appearance">
-                                <i class="fas fa-paint-brush"></i> Branding & UI
-                            </button>
+                            <button class="tab-btn w-full text-left px-4 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-3" data-target="panel-accreditation">
+    <i class="fas fa-certificate"></i> Accreditation & University
+</button>
                             
                             <p class="px-3 text-xs font-bold text-gray-400 uppercase mb-2 mt-4">Personal & Security</p>
                             <button class="tab-btn w-full text-left px-4 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-3" data-target="panel-security">
@@ -500,20 +522,24 @@
                             </div>
                         </div>
 
-                        <div id="panel-appearance" class="settings-panel space-y-6">
-                            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Branding & UI</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Customize the look and feel of the platform for your college.</p>
-                                
-                                <div class="space-y-6">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">College Logo URL</label>
-                                        <input type="url" id="collegeLogoUrl" placeholder="https://yourcollege.edu/logo.png" class="w-full max-w-lg rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white">
-                                        <p class="text-xs text-gray-500 mt-2">Updates the logo displayed on student login screens to white-label the experience.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="panel-accreditation" class="settings-panel space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Accreditation & University</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Manage your university affiliations and accreditation details.</p>
+        
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">University Affiliation</label>
+                <input type="text" id="universityAffiliation" placeholder="e.g. Technical University" class="w-full max-w-lg rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white">
+                <p class="text-xs text-gray-500 mt-2">The primary university your college is affiliated with.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Accreditation </label>
+                <input type="text" id="accreditationBody" placeholder="e.g. NAAC, NBA, ABET" class="w-full max-w-lg rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white">
+            </div>
+        </div>
+    </div>
+</div>
 
                     </div>
                 </div>

@@ -97,6 +97,9 @@ module.exports = (db, transporter) => {
     router.get('/profile', requireRole('admin'), (req, res) => {
         res.sendFile(path.join(__dirname, '../views/admin/profile.html'));
     });
+    router.get('/forgot-password', requireRole('admin'), (req, res) => {
+        res.sendFile(path.join(__dirname, '../views/admin/forgot-password.html'));
+    });
 
     router.get('/help_support', requireRole('admin'), (req, res) => {
         res.sendFile(path.join(__dirname, '../views/admin/help_support.html'));
@@ -122,6 +125,7 @@ module.exports = (db, transporter) => {
         res.sendFile(path.join(__dirname, '../views/admin/thread.html'));
     });
 
+
     // ==========================================
     // SMART ALIAS ROUTES (.html extensions)
     // ==========================================
@@ -137,6 +141,7 @@ module.exports = (db, transporter) => {
     router.get('/help-support', requireRole('admin'), (req, res) => res.redirect('/college/help_support'));
     router.get('/help-support.html', requireRole('admin'), (req, res) => res.redirect('/college/help_support'));
     router.get('/view_student.html', requireRole('admin'), (req, res) => res.redirect('/college/view_student'));
+    router.get('/forgot-password.html', requireRole('admin'), (req, res) => res.redirect('/college/forgot-password'));
    router.get('/community.html', requireRole('admin'), (req, res) => {
     res.sendFile(path.join(__dirname, '../public/forum.html'));
 });
@@ -1040,14 +1045,14 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
                 res.json({ success: true, id: this.lastID, message: "Problem created successfully!" });
             });
     });
-
-    router.put('/api/contests/:id', requireRole('admin'), (req, res) => {
+router.put('/api/contests/:id', requireRole('admin'), (req, res) => {
         const {
             title, scope, level, date, deadline, duration, eligibility, description, discription,
             rulesAndDescription, guidelines, status, colleges, class: contestClassInput, contest_class, prize,
             startDate, endDate,
             reward, target_programs, allowed_roles 
         } = req.body;
+
         const collegesStr = colleges ? JSON.stringify(colleges) : '[]';
         const role = req.session.user.role;
 
@@ -1060,9 +1065,8 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
         
         let finalScope = scope || 'college';
         if (role === 'superadmin') finalScope = 'global';
-        const targetProgramsStr = target_programs ? JSON.stringify(target_programs) : null;
-        const finalAllowedRoles = allowed_roles || null;
 
+<<<<<<< HEAD
         db.run(`UPDATE contests
                 SET title=?, scope=?, level=?, date=?, deadline=?, duration=?, eligibility=?, description=?, rulesAndDescription=?,
                     guidelines=?, contest_class=?, prize=?, startDate=?, endDate=?, status=?, colleges=?,
@@ -1072,9 +1076,43 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
                 title, finalScope, level, date, deadline, duration, eligibility, finalDescription, finalGuidelines,
                 finalGuidelines, normalizedClass, prize || '', finalStartDate, finalEndDate, status || 'upcoming', collegesStr,
                 reward || '', targetProgramsStr, finalAllowedRoles, req.params.id
+=======
+        // ⭐ Fix: Instead of using 'allowed_roles', we use 'target_programs' 
+        // which exists in your database.js schema.
+        const targetProgramsStr = target_programs ? JSON.stringify(target_programs) : JSON.stringify(["All"]);
+
+        // We remove 'allowed_roles' from the SQL SET clause to avoid the SQLite error
+        db.run(`UPDATE contests
+                SET title=?, level=?, date=?, deadline=?, duration=?, eligibility=?, description=?, rulesAndDescription=?,
+                    guidelines=?, contest_class=?, prize=?, startDate=?, endDate=?, status=?, colleges=?,
+                    target_programs=?, reward=?
+                WHERE id=?`,
+            [
+                title, 
+                level, 
+                date, 
+                deadline, 
+                duration, 
+                eligibility, 
+                finalDescription, 
+                finalGuidelines,
+                finalGuidelines, 
+                normalizedClass, 
+                prize || '', 
+                finalStartDate, 
+                finalEndDate, 
+                status || 'upcoming', 
+                collegesStr,
+                targetProgramsStr, // Saved to existing column
+                reward || prize || '', // Saving reward data
+                req.params.id
+>>>>>>> 0590900 (update sidenavbar image and ui)
             ],
             function(err) {
-                if (err) return res.status(500).json({ success: false, message: err.message });
+                if (err) {
+                    console.error("Update Error:", err.message);
+                    return res.status(500).json({ success: false, message: err.message });
+                }
                 res.json({ success: true, message: "Contest updated successfully!" });
             });
     });
@@ -1284,5 +1322,6 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
         });
     });
     // ==========================================
+    
     return router;
 };

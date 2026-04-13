@@ -69,7 +69,6 @@
     .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 1; }
     .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 2; }
 
-        /* FIX: Quill Editor text clearly visible in Dark Mode */
         .dark .ql-toolbar { border-color: #374151; background: #1F2937; color: #fff;}
         .dark .ql-container { border-color: #374151; color: #F9FAFB; }
         .dark .ql-editor { color: #F9FAFB !important; }
@@ -95,12 +94,15 @@
 
     <div class="flex h-screen overflow-hidden">
         <aside id="mainSidebar" class="sidebar w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 flex flex-col h-screen flex-shrink-0 transition-colors duration-200 z-50">
-            <div class="p-6 flex-shrink-0 flex items-center justify-between h-[88px]">
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2 overflow-hidden whitespace-nowrap">
-                    <i class="fas fa-code text-primary-500 text-2xl flex-shrink-0"></i>
-                    <span class="logo-text transition-all duration-300 opacity-100 w-auto">CampusCode</span>
+            <div class="px-4 py-6 flex-shrink-0 flex items-center justify-between h-[88px]">
+                <h1
+                    class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-1 overflow-hidden whitespace-nowrap">
+                    <img src="/campuscode-logo.jpeg" alt="CampusCode Logo" class="h-12 w-12 transform scale-[1.3] flex-shrink-0 object-contain dark:invert mix-blend-multiply dark:mix-blend-normal" />
+                    
+                    <span class="logo-text transition-all duration-300 opacity-100 w-auto ml-1">CampusCode</span>
                 </h1>
-                <button id="sidebarToggleBtn" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-500 transition-colors focus:outline-none">
+                <button id="sidebarToggleBtn"
+                    class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-500 transition-colors focus:outline-none flex-shrink-0 relative z-10">
                     <i class="fas fa-chevron-left transition-transform duration-300"></i>
                 </button>
             </div>
@@ -161,8 +163,13 @@
 
             <main class="p-8">
                 <div class="flex items-center gap-4 mb-8 bg-gray-200 dark:bg-gray-800 p-1.5 rounded-2xl w-fit">
-                    <button onclick="switchLevel('college')" id="collegeLevelBtn" class="px-6 py-2.5 rounded-xl font-bold transition-all bg-white dark:bg-gray-700 shadow-sm text-primary-500">College Level</button>
-                    <button onclick="switchLevel('multi-college')" id="multiCollegeLevelBtn" class="px-6 py-2.5 rounded-xl font-bold transition-all text-gray-500 dark:text-gray-400 bg-transparent shadow-none">Multi-College Level</button>
+                    <button onclick="switchLevel('college')" 
+        id="collegeLevelBtn" 
+        class="px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm
+               bg-white text-primary-500 
+               dark:bg-gray-700 dark:text-primary-300">
+    College Level
+</button>  <button onclick="switchLevel('multi-college')" id="multiCollegeLevelBtn" class="px-6 py-2.5 rounded-xl font-bold transition-all text-gray-500 dark:text-gray-400 bg-transparent shadow-none">Multi-College Level</button>
                     <button onclick="switchLevel('global')" id="globalLevelBtn" class="px-6 py-2.5 rounded-xl font-bold transition-all text-gray-500 dark:text-gray-400 bg-transparent shadow-none">Global Level</button>
                 </div>
                 
@@ -368,7 +375,7 @@
                         <span id="detDuration" class="font-semibold text-gray-800 dark:text-white"></span>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border dark:border-gray-600">
-                        <span class="block text-xs font-bold text-gray-400 uppercase mb-1">Deadline</span>
+                        <span class="block text-xs font-bold text-gray-400 uppercase mb-1">Reg.Deadline</span>
                         <span id="detDeadlineFull" class="font-semibold text-gray-800 dark:text-white"></span>
                     </div>
                 </div>
@@ -444,14 +451,12 @@
 
         async function fetchAdminProfile() {
             try {
-                // 1. Fetch User Profile
                 const response = await fetch('/college/api/profile');
                 const result = await response.json();
                 
                 if (result.success || result.user) {
                     const user = result.user || result;
                     
-                    // PRESERVE GLOBAL VARIABLES NEEDED FOR CONTEST LOGIC
                     currentUserId = user.id; 
                     currentUserCollege = user.collegeName; 
 
@@ -459,13 +464,11 @@
                     const nameParts = name.split(' ');
                     const initials = nameParts.length > 1 ? (nameParts[0][0] + nameParts[1][0]).toUpperCase() : nameParts[0].substring(0, 2).toUpperCase();
 
-                    // Update Header
                     const headerName = document.getElementById('headerName');
                     const headerInitials = document.getElementById('headerInitials');
                     if (headerName) headerName.textContent = name;
                     if (headerInitials) headerInitials.textContent = initials;
 
-                    // Update Modal Overlay with exact new IDs
                     const modalName = document.getElementById('profileOverlayName');
                     const modalInitials = document.getElementById('profileOverlayInitials');
                     const modalCollege = document.getElementById('profileOverlayCollege');
@@ -482,7 +485,6 @@
                     }
                 }
 
-                // 2. Fetch Stats for the Modal Overlay
                 try {
                     const [contestsRes, usersRes, programsRes] = await Promise.all([
                         fetch('/college/api/contests'),
@@ -653,11 +655,11 @@
             });
             
             if (level === 'college' && btnCollege) {
-                btnCollege.className = 'px-6 py-2.5 rounded-xl font-bold transition-all bg-white dark:bg-gray-700 shadow-sm text-primary-500';
+                btnCollege.className = 'px-6 py-2.5 rounded-xl font-bold transition-all bg-white dark:bg-gray-700 shadow-sm text-primary-500 dark:text-primary-300';
             } else if (level === 'multi-college' && btnMulti) {
-                btnMulti.className = 'px-6 py-2.5 rounded-xl font-bold transition-all bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400';
+                btnMulti.className = 'px-6 py-2.5 rounded-xl font-bold transition-all bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-300';
             } else if (level === 'global' && btnGlobal) {
-                btnGlobal.className = 'px-6 py-2.5 rounded-xl font-bold transition-all bg-white dark:bg-gray-700 shadow-sm text-green-600 dark:text-green-400';
+                btnGlobal.className = 'px-6 py-2.5 rounded-xl font-bold transition-all bg-white dark:bg-gray-700 shadow-sm text-green-600 dark:text-green-300';
             }
 
             const createBtn = document.getElementById('createContestBtn');
@@ -700,14 +702,14 @@
                 let manageButtons = '';
                 if (c.createdBy === currentUserId || c.creator_id === currentUserId) {
                     manageButtons = `
-                        <button onclick="editContest(${c.id})" class="text-gray-400 hover:text-primary-500 transition-colors p-2" title="Edit Contest"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteContest(${c.id})" class="text-gray-400 hover:text-red-500 transition-colors p-2" title="Delete Contest"><i class="fas fa-trash-alt"></i></button>
-                        <button onclick="openAddProblemModal(${c.id})" class="ml-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Manage Problems</button>
+                        <button onclick="event.stopPropagation(); editContest(${c.id})" class="text-gray-400 hover:text-primary-500 transition-colors p-2" title="Edit Contest"><i class="fas fa-edit"></i></button>
+                        <button onclick="event.stopPropagation(); deleteContest(${c.id})" class="text-gray-400 hover:text-red-500 transition-colors p-2" title="Delete Contest"><i class="fas fa-trash-alt"></i></button>
+                        <button onclick="event.stopPropagation(); openAddProblemModal(${c.id})" class="ml-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Manage Problems</button>
                     `;
                 }
 
                 container.innerHTML += `
-                <div class="bg-white dark:bg-gray-800 rounded-3xl p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow group">
+                <div onclick="showDetailsModal(${c.id})" class="bg-white dark:bg-gray-800 rounded-3xl p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow group cursor-pointer">
                     <div class="p-6 flex flex-col md:flex-row gap-6 relative">
                         <div class="w-full md:w-1/4">
                             <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl p-5 text-center h-full border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
@@ -723,12 +725,12 @@
                                     <span class="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-[10px] px-2 py-1 rounded font-bold uppercase">${c.scope || currentLevel}</span>
                                 </div>
                                 <div class="flex gap-2 items-center">
-                                    <button onclick="showDetailsModal(${c.id})" class="text-primary-500 hover:text-primary-600 font-bold text-sm mx-2" title="View Details"><i class="fas fa-info-circle"></i> Details</button>
-                                    <button onclick="shareContest(${c.id})" class="text-blue-500 hover:text-blue-600 font-bold text-sm mx-2" title="Share Contest"><i class="fas fa-share-alt"></i> Share</button>
+                                    <button onclick="event.stopPropagation(); showDetailsModal(${c.id})" class="text-primary-500 hover:text-primary-600 font-bold text-sm mx-2" title="View Details"><i class="fas fa-info-circle"></i> Details</button>
+                                    <button onclick="event.stopPropagation(); shareContest(${c.id})" class="text-blue-500 hover:text-blue-600 font-bold text-sm mx-2" title="Share Contest"><i class="fas fa-share-alt"></i> Share</button>
                                     ${manageButtons}
                                 </div>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-primary-600 transition-colors cursor-pointer">${c.title}</h3>
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors">${c.title}</h3>
                             <p class="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2">${c.description || 'No description provided.'}</p>
                             
                             <div class="flex flex-wrap gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -796,10 +798,11 @@
             document.getElementById('contestDesc').value = c.description || "";
             quillEditor.root.innerHTML = c.rulesAndDescription || "";
             
-            const isAll = c.target_programs && c.target_programs.includes("All");
+            const targetProgs = c.target_programs || ["All"];
+            const isAll = targetProgs.includes("All");
             document.getElementById('selectAllProgramsCb').checked = isAll;
             document.querySelectorAll('.program-cb').forEach(cb => {
-                cb.checked = isAll || (c.target_programs && c.target_programs.includes(cb.value));
+                cb.checked = isAll || targetProgs.includes(cb.value);
             });
             updateSelectAllProgramsCb();
 
