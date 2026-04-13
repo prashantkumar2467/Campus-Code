@@ -97,6 +97,9 @@ module.exports = (db, transporter) => {
     router.get('/profile', requireRole('admin'), (req, res) => {
         res.sendFile(path.join(__dirname, '../views/admin/profile.html'));
     });
+    router.get('/forgot-password', requireRole('admin'), (req, res) => {
+        res.sendFile(path.join(__dirname, '../views/admin/forgot-password.html'));
+    });
 
     router.get('/help_support', requireRole('admin'), (req, res) => {
         res.sendFile(path.join(__dirname, '../views/admin/help_support.html'));
@@ -109,9 +112,19 @@ module.exports = (db, transporter) => {
     router.get('/view_student', requireRole('admin'), (req, res) => {
         res.sendFile(path.join(__dirname, '../views/student/view_student.html'));
     });
+
+    // Serve community/forum for admin from admin views
     router.get('/community', requireRole('admin'), (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/forum.html'));
-});
+        res.sendFile(path.join(__dirname, '../views/admin/community-forum.html'));
+    });
+    // ==========================================
+    // SERVE THREAD DETAILS PAGE
+    // ==========================================
+    router.get('/forum/thread/:id', requireRole('admin'), (req, res) => {
+        // This will serve the thread.html file from your views folder
+        res.sendFile(path.join(__dirname, '../views/admin/thread.html'));
+    });
+
 
     // ==========================================
     // SMART ALIAS ROUTES (.html extensions)
@@ -128,6 +141,7 @@ module.exports = (db, transporter) => {
     router.get('/help-support', requireRole('admin'), (req, res) => res.redirect('/college/help_support'));
     router.get('/help-support.html', requireRole('admin'), (req, res) => res.redirect('/college/help_support'));
     router.get('/view_student.html', requireRole('admin'), (req, res) => res.redirect('/college/view_student'));
+    router.get('/forgot-password.html', requireRole('admin'), (req, res) => res.redirect('/college/forgot-password'));
    router.get('/community.html', requireRole('admin'), (req, res) => {
     res.sendFile(path.join(__dirname, '../public/forum.html'));
 });
@@ -409,20 +423,27 @@ module.exports = (db, transporter) => {
 
     router.get('/api/users', requireRole('admin'), (req, res) => {
         const collegeName = req.session.user.collegeName;
-        
+
+        // Simpler, safer query that returns users and computed counts. Complex ranking logic
+        // was removed to avoid malformed SQL and heavy nested queries. We can add
+        // ranking later in a separate endpoint if needed.
         const query = `
-            SELECT 
-                u.*,
+            SELECT u.*,
                 (SELECT COUNT(*) FROM contests WHERE createdBy = u.id AND status = 'accepted') AS contests_created,
-                (SELECT COUNT(*) FROM problems WHERE faculty_id = u.id AND status = 'accepted') AS problems_created
+                (SELECT COUNT(*) FROM problems WHERE faculty_id = u.id AND status = 'accepted') AS problems_created,
+                (SELECT COUNT(DISTINCT problem_id) FROM submissions WHERE user_id = u.id AND status = 'accepted') AS problems_solved,
+                (SELECT COUNT(DISTINCT contest_id) FROM contest_participants WHERE user_id = u.id) AS contests_participated
             FROM users u
             WHERE u.collegeName = ? AND u.role IN ('student', 'faculty', 'hod', 'hos') AND u.status = 'active'
             ORDER BY u.id DESC
         `;
 
         db.all(query, [collegeName], (err, rows) => {
-            if (err) return res.status(500).json({ success: false, error: err.message });
-            res.json({ success: true, users: rows });
+            if (err) {
+                console.error("Error fetching users:", err && err.message ? err.message : err);
+                return res.status(500).json({ success: false, error: err.message || 'Database error' });
+            }
+            res.json({ success: true, users: rows || [] });
         });
     });
 router.post('/api/users/bulk', requireRole('admin'), async (req, res) => {
@@ -1024,14 +1045,14 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
                 res.json({ success: true, id: this.lastID, message: "Problem created successfully!" });
             });
     });
-
-    router.put('/api/contests/:id', requireRole('admin'), (req, res) => {
+router.put('/api/contests/:id', requireRole('admin'), (req, res) => {
         const {
             title, scope, level, date, deadline, duration, eligibility, description, discription,
             rulesAndDescription, guidelines, status, colleges, class: contestClassInput, contest_class, prize,
             startDate, endDate,
             reward, target_programs, allowed_roles 
         } = req.body;
+
         const collegesStr = colleges ? JSON.stringify(colleges) : '[]';
         const role = req.session.user.role;
 
@@ -1044,8 +1065,6 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
         
         let finalScope = scope || 'college';
         if (role === 'superadmin') finalScope = 'global';
-        const targetProgramsStr = target_programs ? JSON.stringify(target_programs) : null;
-        const finalAllowedRoles = allowed_roles || null;
 
         db.run(`UPDATE contests
                 SET title=?, scope=?, level=?, date=?, deadline=?, duration=?, eligibility=?, description=?, rulesAndDescription=?,
@@ -1058,7 +1077,10 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
                 reward || '', targetProgramsStr, finalAllowedRoles, req.params.id
             ],
             function(err) {
-                if (err) return res.status(500).json({ success: false, message: err.message });
+                if (err) {
+                    console.error("Update Error:", err.message);
+                    return res.status(500).json({ success: false, message: err.message });
+                }
                 res.json({ success: true, message: "Contest updated successfully!" });
             });
     });
@@ -1220,7 +1242,7 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
             );
         }
     });
-    // ⭐ BULK ACCEPT/REJECT USERS
+   // ⭐ BULK ACCEPT/REJECT USERS
     router.put('/api/users/bulk-status', requireRole('admin'), (req, res) => {
         const { userIds, status } = req.body;
         if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
@@ -1237,5 +1259,37 @@ router.get('/api/contests', requireRole('admin'), (req, res) => {
         });
     });
 
+    // ⭐ BULK DELETE USERS (URL changed to prevent conflicts)
+    router.delete('/api/bulk-delete-users', requireRole('admin'), (req, res) => {
+        const { userIds } = req.body;
+        
+        // 1. Check if we received an array of IDs
+        if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({ success: false, message: "No users selected" });
+        }
+
+        // 2. Create the exact number of placeholders (?, ?, ?) needed for the SQL query
+        const placeholders = userIds.map(() => '?').join(',');
+        
+        // 3. Write the DELETE query. (We check collegeName to prevent deleting users from other colleges)
+        const query = `DELETE FROM users WHERE id IN (${placeholders}) AND collegeName = ?`;
+
+        // 4. Execute the query
+        db.run(query, [...userIds, req.session.user.collegeName], function(err) {
+            if (err) {
+                console.error("Bulk delete error:", err);
+                return res.status(500).json({ success: false, message: "Database error while deleting users." });
+            }
+            
+            // this.changes tells us exactly how many rows were deleted
+            if (this.changes === 0) {
+                return res.json({ success: false, message: "No users were deleted. They may not exist or belong to your college." });
+            }
+
+            res.json({ success: true, message: `Successfully deleted ${this.changes} users.` });
+        });
+    });
+    // ==========================================
+    
     return router;
 };

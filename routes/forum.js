@@ -361,8 +361,9 @@ module.exports = (db) => {
     // ==========================================
     // 6. CREATE REPLY
     // ==========================================
-    router.post('/replies', requireAuth, (req, res) => {
-        const { thread_id, content } = req.body;
+    router.post('/threads/:id/replies', requireAuth, (req, res) => {
+        const thread_id = req.params.id; // Extract thread ID from the URL
+        const { content } = req.body;
         const user_id = req.session.user.id;
 
         if (!thread_id || !content) {
@@ -380,7 +381,6 @@ module.exports = (db) => {
             }
         );
     });
-
     // ==========================================
     // 7. VOTE ON REPLY
     // ==========================================
