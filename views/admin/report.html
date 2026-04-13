@@ -200,25 +200,26 @@
                     <i class="fas fa-moon"></i>
                 </button>
 
-                <div class="relative">
-                    <button onclick="toggleNotifications()"
-                        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors relative">
-                        <i class="fas fa-bell"></i>
-                        <span
-                            class="absolute top-1.5 right-2 h-2 w-2 bg-red-500 rounded-full border border-white dark:border-gray-800"></span>
-                    </button>
-                    <div id="notificationDropdown"
-                        class="hidden absolute right-0 mt-3 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-[60]">
-                        <div
-                            class="p-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-800 dark:text-white text-sm">Notifications</h3>
+               <div class="relative">
+                            <button id="notificationBtn"
+                                class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span
+                                    class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-gray-800"></span>
+                            </button>
+                            <div id="notifDropdown"
+                                class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50">
+                                <div
+                                    class="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                                    <h3 class="font-semibold text-gray-800 dark:text-white text-sm">Notifications</h3>
+                                    <button class="text-xs text-primary-500 font-medium hover:text-primary-600">Mark all
+                                        read</button>
+                                </div>
+                                <div class="max-h-64 overflow-y-auto p-4 text-center text-xs text-gray-500">
+                                    No new notifications
+                                </div>
+                            </div>
                         </div>
-                        <div class="max-h-60 overflow-y-auto p-3 text-center text-xs text-gray-500">
-                            No new notifications
-                        </div>
-                    </div>
-                </div>
-
                 <div class="relative ml-2 border-l border-gray-200 dark:border-gray-700 pl-4">
                     <button id="headerProfileBtn" onclick="toggleProfile()"
                         class="flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -994,6 +995,26 @@
                 XLSX.writeFile(wb, 'CampusCode_Report.xlsx');
             } catch (err) { alert("Failed to export Excel. Please ensure SheetJS is loaded."); }
         }
+        // notification
+        document.addEventListener('DOMContentLoaded', () => {
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notifDropdown = document.getElementById('notifDropdown');
+
+        if (notificationBtn && notifDropdown) {
+            // Toggle dropdown when clicking the bell icon
+            notificationBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent click from instantly triggering the document click listener
+                notifDropdown.classList.toggle('hidden');
+            });
+
+            // Close the dropdown if the user clicks anywhere else on the screen
+            document.addEventListener('click', (e) => {
+                if (!notifDropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
+                    notifDropdown.classList.add('hidden');
+                }
+            });
+        }
+    });
     </script>
 </body>
 

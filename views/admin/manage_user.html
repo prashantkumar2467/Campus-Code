@@ -239,21 +239,26 @@
                     <i class="fas fa-moon text-xl"></i>
                 </button>
                 
-                <div class="relative">
-                    <button id="notificationBtn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
-                        <i class="fas fa-bell text-xl"></i>
-                        <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-gray-800 hidden" id="notifBadgeHeader"></span>
-                    </button>
-                    <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50">
-                        <div class="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-800 dark:text-white text-sm">Notifications</h3>
-                            <button class="text-xs text-primary-500 font-medium hover:text-primary-600">Mark all read</button>
-                        </div>
-                        <div class="max-h-64 overflow-y-auto p-3">
-                            <p class="text-sm text-gray-500 text-center">No new notifications</p>
-                        </div>
-                    </div>
-                </div>
+               <div class="relative">
+    <button id="notificationBtn"
+        class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
+        <i class="fas fa-bell text-xl"></i>
+        <span
+            class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-gray-800"></span>
+    </button>
+    <div id="notifDropdown"
+        class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50">
+        <div
+            class="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <h3 class="font-semibold text-gray-800 dark:text-white text-sm">Notifications</h3>
+            <button class="text-xs text-primary-500 font-medium hover:text-primary-600">Mark all
+                read</button>
+        </div>
+        <div class="max-h-64 overflow-y-auto p-4 text-center text-xs text-gray-500">
+            No new notifications
+        </div>
+    </div>
+</div>
 
                 <button onclick="toggleProfile()" class="ml-2 flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                       <div class="h-9 w-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm" id="headerInitials"></div>
