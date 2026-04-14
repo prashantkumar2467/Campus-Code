@@ -220,7 +220,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
             });
             db.run(`INSERT OR REPLACE INTO student (${mirrorCols})
                     SELECT ${mirrorCols} FROM users
-                    WHERE LOWER(COALESCE(role, '')) IN ('student', 'individual', 'superadmin')`, (err) => {
+                    WHERE LOWER(COALESCE(role, '')) IN ('student', 'individual')`, (err) => {
                 if (err) console.error("Error backfilling student table from users:", err.message);
             });
             db.run(`INSERT OR REPLACE INTO faculty (${mirrorCols})
@@ -255,7 +255,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                             NEW.joiningDate, NEW.course, NEW.subject, NEW.points, NEW.solvedCount, NEW.rank, NEW.is_hod,
                             NEW.notif_contest_alerts, NEW.notif_submission_results, NEW.notif_deadline_reminders,
                             NEW.pending_college_name, NEW.college_request_status, NEW.github_link, NEW.location, NEW.createdAt
-                        WHERE LOWER(COALESCE(NEW.role, '')) IN ('student', 'individual', 'superadmin');
+                        WHERE LOWER(COALESCE(NEW.role, '')) IN ('student', 'individual');
 
                         INSERT INTO faculty (${mirrorCols})
                         SELECT
@@ -282,7 +282,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                             NEW.joiningDate, NEW.course, NEW.subject, NEW.points, NEW.solvedCount, NEW.rank, NEW.is_hod,
                             NEW.notif_contest_alerts, NEW.notif_submission_results, NEW.notif_deadline_reminders,
                             NEW.pending_college_name, NEW.college_request_status, NEW.github_link, NEW.location, NEW.createdAt
-                        WHERE LOWER(COALESCE(NEW.role, '')) IN ('student', 'individual', 'superadmin');
+                        WHERE LOWER(COALESCE(NEW.role, '')) IN ('student', 'individual');
 
                         INSERT INTO faculty (${mirrorCols})
                         SELECT
@@ -479,6 +479,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
             db.run(`CREATE TRIGGER IF NOT EXISTS trg_account_users_delete
                     INSTEAD OF DELETE ON account_users
                     BEGIN
+                        SELECT RAISE(ABORT, 'Superadmin account cannot be deleted')
+                        WHERE LOWER(COALESCE(OLD.role, '')) = 'superadmin';
                         DELETE FROM users WHERE id = OLD.id;
                     END`, () => {});
 
