@@ -402,7 +402,7 @@
                             </span>
                         </td>
                         <td class="py-4 px-6 text-right space-x-2">
-                            <a href="/college/admin/dashboard?college=${encodeURIComponent(college.name)}" class="inline-block text-primary-500 hover:text-primary-700 transition bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:hover:bg-primary-900/40 border border-primary-100 dark:border-primary-800 px-3 py-1.5 rounded-lg text-sm font-medium" title="Manage College Dashboard">
+                            <a href="/superadmin/colleges/manage/${college.id}" class="inline-block text-primary-500 hover:text-primary-700 transition bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:hover:bg-primary-900/40 border border-primary-100 dark:border-primary-800 px-3 py-1.5 rounded-lg text-sm font-medium" title="Manage College">
                                 <i class="fas fa-external-link-alt mr-1"></i> Manage
                             </a>
                             <button onclick="deleteCollege(${college.id})" class="inline-block text-red-500 hover:text-red-700 transition bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 border border-red-100 dark:border-red-800 px-3 py-1.5 rounded-lg text-sm font-medium" title="Remove College">

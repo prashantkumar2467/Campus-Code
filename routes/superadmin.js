@@ -14,6 +14,20 @@ module.exports = (db) => {
             resolve(this);
         });
     });
+    const getAccountTable = async () => {
+        const rows = await dbAll(`
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table' AND name IN ('account_users', 'users')
+            ORDER BY CASE WHEN name = 'account_users' THEN 0 ELSE 1 END
+            LIMIT 1
+        `);
+        return rows[0]?.name || 'users';
+    };
+    const getTableColumns = async (tableName) => {
+        const rows = await dbAll(`PRAGMA table_info(${tableName})`);
+        return new Set((rows || []).map((row) => String(row.name || '').trim()));
+    };
 
     // ==========================================
     // DASHBOARD VIEW
@@ -30,24 +44,34 @@ module.exports = (db) => {
         res.render('superadmin/support.html', { user: req.session.user, currentPage: 'support' });
     });
 
+    router.get('/colleges/manage/:id', requireRole('superadmin'), checkScope, (req, res) => {
+        res.render('superadmin/college_manage.html', {
+            user: req.session.user,
+            currentPage: 'dashboard',
+            initialCollegeId: Number(req.params.id) || 0
+        });
+    });
+
     // ==========================================
     // SUPERADMIN APIs (Manage Colleges)
     // ==========================================
     // Fetch all colleges
     router.get('/api/colleges', requireRole('superadmin'), (req, res) => {
-        db.all(`
+        (async () => {
+            const accountTable = await getAccountTable();
+            db.all(`
             SELECT
                 c.*,
                 COALESCE((
                     SELECT GROUP_CONCAT(u.fullName, ', ')
-                    FROM account_users u
+                    FROM ${accountTable} u
                     WHERE LOWER(TRIM(u.collegeName)) = LOWER(TRIM(c.name))
                       AND u.role = 'admin'
                       AND u.status = 'active'
                 ), 'Not Assigned') AS adminNames,
                 COALESCE((
                     SELECT u.fullName
-                    FROM account_users u
+                    FROM ${accountTable} u
                     WHERE LOWER(TRIM(u.collegeName)) = LOWER(TRIM(c.name))
                       AND u.role = 'admin'
                       AND u.status = 'active'
@@ -60,6 +84,7 @@ module.exports = (db) => {
             if (err) return res.status(500).json({ success: false, error: err.message });
             res.json({ success: true, colleges: rows });
         });
+        })().catch((error) => res.status(500).json({ success: false, error: error.message }));
     });
 
     // Add a new college
@@ -82,33 +107,138 @@ module.exports = (db) => {
         });
     });
 
+    router.get('/api/college-management', requireRole('superadmin'), async (req, res) => {
+        try {
+            const accountTable = await getAccountTable();
+            const problemCols = await getTableColumns('problems');
+            const contestCols = await getTableColumns('contests');
+            const hasProblemCreatedBy = problemCols.has('created_by');
+            const hasProblemFacultyId = problemCols.has('faculty_id');
+            const hasContestCollegeName = contestCols.has('collegeName');
+            const colleges = await dbAll(`
+                SELECT id, name, COALESCE(status, 'active') AS status
+                FROM colleges
+                ORDER BY id DESC
+            `);
+
+            const response = [];
+            for (const college of colleges) {
+                const collegeName = String(college.name || '').trim();
+                const admins = await dbAll(`
+                    SELECT id, fullName, email
+                    FROM ${accountTable}
+                    WHERE LOWER(TRIM(COALESCE(collegeName, ''))) = LOWER(TRIM(?))
+                      AND LOWER(COALESCE(role, '')) = 'admin'
+                      AND LOWER(COALESCE(status, '')) = 'active'
+                    ORDER BY id ASC
+                `, [collegeName]);
+
+                let problemCount = 0;
+                if (hasProblemCreatedBy || hasProblemFacultyId) {
+                    const ownerExpr = hasProblemCreatedBy && hasProblemFacultyId
+                        ? 'COALESCE(pr.created_by, pr.faculty_id)'
+                        : (hasProblemCreatedBy ? 'pr.created_by' : 'pr.faculty_id');
+                    const rows = await dbAll(`
+                        SELECT COUNT(*) AS count
+                        FROM problems pr
+                        LEFT JOIN ${accountTable} u ON u.id = ${ownerExpr}
+                        WHERE LOWER(TRIM(COALESCE(u.collegeName, ''))) = LOWER(TRIM(?))
+                    `, [collegeName]);
+                    problemCount = Number(rows[0]?.count || 0);
+                }
+
+                let contestCount = 0;
+                if (hasContestCollegeName) {
+                    const rows = await dbAll(`
+                        SELECT COUNT(*) AS count
+                        FROM contests c
+                        WHERE LOWER(TRIM(COALESCE(c.collegeName, ''))) = LOWER(TRIM(?))
+                    `, [collegeName]);
+                    contestCount = Number(rows[0]?.count || 0);
+                } else {
+                    const rows = await dbAll(`
+                        SELECT COUNT(*) AS count
+                        FROM contests c
+                        LEFT JOIN ${accountTable} u ON u.id = c.createdBy
+                        WHERE LOWER(TRIM(COALESCE(u.collegeName, ''))) = LOWER(TRIM(?))
+                    `, [collegeName]);
+                    contestCount = Number(rows[0]?.count || 0);
+                }
+
+                const metrics = await dbAll(`
+                    SELECT
+                        (SELECT COUNT(*) FROM programs p WHERE LOWER(TRIM(COALESCE(p.collegeName, ''))) = LOWER(TRIM(?))) AS programCount,
+                        (SELECT COUNT(*) FROM branches b WHERE LOWER(TRIM(COALESCE(b.collegeName, ''))) = LOWER(TRIM(?))) AS branchCount,
+                        (SELECT COUNT(*) FROM student s WHERE LOWER(TRIM(COALESCE(s.collegeName, ''))) = LOWER(TRIM(?)) AND LOWER(COALESCE(s.role, '')) = 'student') AS studentCount,
+                        (SELECT COUNT(*) FROM faculty f WHERE LOWER(TRIM(COALESCE(f.collegeName, ''))) = LOWER(TRIM(?)) AND LOWER(COALESCE(f.role, '')) = 'faculty') AS facultyCount
+                `, [collegeName, collegeName, collegeName, collegeName]);
+
+                response.push({
+                    id: college.id,
+                    name: collegeName,
+                    status: college.status || 'active',
+                    adminNames: admins.map((a) => a.fullName),
+                    admins,
+                    metrics: {
+                        ...(metrics[0] || {
+                            programCount: 0,
+                            branchCount: 0,
+                            studentCount: 0,
+                            facultyCount: 0
+                        }),
+                        problemCount,
+                        contestCount
+                    } || {
+                        programCount: 0,
+                        branchCount: 0,
+                        studentCount: 0,
+                        facultyCount: 0,
+                    }
+                });
+            }
+
+            res.json({ success: true, colleges: response });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
     // ==========================================
     // SUPERADMIN APIs (Manage Admin Approvals)
     // ==========================================
     
     // 1. Fetch all pending college admins
     router.get('/api/pending-admins', requireRole('superadmin'), (req, res) => {
-        db.all(`SELECT id, fullName, email, collegeName FROM account_users WHERE role = 'admin' AND status = 'pending' ORDER BY id DESC`, [], (err, rows) => {
-            if (err) return res.status(500).json({ success: false, error: err.message });
-            res.json({ success: true, pendingAdmins: rows });
-        });
+        (async () => {
+            const accountTable = await getAccountTable();
+            db.all(`SELECT id, fullName, email, collegeName FROM ${accountTable} WHERE role = 'admin' AND status = 'pending' ORDER BY id DESC`, [], (err, rows) => {
+                if (err) return res.status(500).json({ success: false, error: err.message });
+                res.json({ success: true, pendingAdmins: rows });
+            });
+        })().catch((error) => res.status(500).json({ success: false, error: error.message }));
     });
 
     // 2. Approve a pending admin
     router.post('/api/approve-admin/:id', requireRole('superadmin'), (req, res) => {
-        db.run(`UPDATE account_users SET status = 'active' WHERE id = ? AND role = 'admin'`, [req.params.id], function(err) {
-            if (err) return res.status(500).json({ success: false, error: err.message });
-            if (this.changes === 0) return res.status(404).json({ success: false, message: 'Admin not found or already active' });
-            res.json({ success: true, message: 'College Admin approved successfully' });
-        });
+        (async () => {
+            const accountTable = await getAccountTable();
+            db.run(`UPDATE ${accountTable} SET status = 'active' WHERE id = ? AND role = 'admin'`, [req.params.id], function(err) {
+                if (err) return res.status(500).json({ success: false, error: err.message });
+                if (this.changes === 0) return res.status(404).json({ success: false, message: 'Admin not found or already active' });
+                res.json({ success: true, message: 'College Admin approved successfully' });
+            });
+        })().catch((error) => res.status(500).json({ success: false, error: error.message }));
     });
 
     // 3. Reject (delete) a pending admin
     router.delete('/api/reject-admin/:id', requireRole('superadmin'), (req, res) => {
-        db.run(`DELETE FROM account_users WHERE id = ? AND role = 'admin' AND status = 'pending'`, [req.params.id], function(err) {
-            if (err) return res.status(500).json({ success: false, error: err.message });
-            res.json({ success: true, message: 'College Admin registration rejected' });
-        });
+        (async () => {
+            const accountTable = await getAccountTable();
+            db.run(`DELETE FROM ${accountTable} WHERE id = ? AND role = 'admin' AND status = 'pending'`, [req.params.id], function(err) {
+                if (err) return res.status(500).json({ success: false, error: err.message });
+                res.json({ success: true, message: 'College Admin registration rejected' });
+            });
+        })().catch((error) => res.status(500).json({ success: false, error: error.message }));
     });
 
     // ==========================================
@@ -295,8 +425,8 @@ module.exports = (db) => {
                        u.fullName as userFullName,
                        r.fullName as resolvedByName
                 FROM support_tickets t
-                LEFT JOIN account_users u ON u.id = t.user_id
-                LEFT JOIN account_users r ON r.id = t.resolved_by
+                LEFT JOIN users u ON u.id = t.user_id
+                LEFT JOIN users r ON r.id = t.resolved_by
                 ${where}
                 ORDER BY CASE
                     WHEN LOWER(t.status) = 'open' THEN 1

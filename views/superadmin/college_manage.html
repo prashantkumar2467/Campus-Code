@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusCode - College Management</title>
+    <link rel="shortcut icon" href="/campuscode-logo.jpeg" type="image/jpeg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: { sans: ["Poppins", "sans-serif"] },
+                    colors: {
+                        primary: { 50: "#E7F0FA", 100: "#D0E1F5", 200: "#7BA4D0", 300: "#4D84C0", 400: "#2E5E99", 500: "#1E4A7A", 600: "#0D2440" }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <header class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 px-5 py-4 mb-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <a href="/superadmin/dashboard" class="inline-flex items-center gap-2 text-sm font-semibold text-primary-500 hover:text-primary-600">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back</span>
+                    </a>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">College Management</h1>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Institution details with dynamic metrics for all authorized colleges.</p>
+                    </div>
+                </div>
+                <button onclick="toggleTheme()" class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <section class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 mb-5">
+            <div id="college-strip" class="flex gap-2 overflow-x-auto pb-1"></div>
+        </section>
+
+        <section class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 mb-5 overflow-hidden">
+            <div class="px-4 md:px-6 border-b border-gray-200 dark:border-gray-700">
+                <nav class="flex gap-6 overflow-x-auto">
+                    <button data-tab="overview" class="tab-btn py-3 border-b-2 border-primary-500 text-primary-500 font-semibold">Overview</button>
+                    <button data-tab="academics" class="tab-btn py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium">Academics</button>
+                    <button data-tab="users" class="tab-btn py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium">Users</button>
+                    <button data-tab="content" class="tab-btn py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium">Content</button>
+                </nav>
+            </div>
+
+            <div id="tab-overview" class="tab-panel p-4 md:p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Programs</p>
+                        <p id="metric-programs" class="text-2xl font-bold text-gray-900 dark:text-white mt-1">0</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Branches</p>
+                        <p id="metric-branches" class="text-2xl font-bold text-gray-900 dark:text-white mt-1">0</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Students</p>
+                        <p id="metric-students" class="text-2xl font-bold text-gray-900 dark:text-white mt-1">0</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Faculty</p>
+                        <p id="metric-faculty" class="text-2xl font-bold text-gray-900 dark:text-white mt-1">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-academics" class="tab-panel p-4 md:p-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Program Count</p>
+                        <p id="academic-programs" class="text-3xl font-bold text-primary-500">0</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Branch Count</p>
+                        <p id="academic-branches" class="text-3xl font-bold text-primary-500">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-users" class="tab-panel p-4 md:p-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Student Count</p>
+                        <p id="users-students" class="text-3xl font-bold text-primary-500">0</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Faculty Count</p>
+                        <p id="users-faculty" class="text-3xl font-bold text-primary-500">0</p>
+                    </div>
+                </div>
+                <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">College Admin</p>
+                    <div id="college-admin-list" class="space-y-2 text-sm text-gray-700 dark:text-gray-300"></div>
+                </div>
+            </div>
+
+            <div id="tab-content" class="tab-panel p-4 md:p-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Problems Created</p>
+                        <p id="content-problems" class="text-3xl font-bold text-primary-500">0</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Contests Created</p>
+                        <p id="content-contests" class="text-3xl font-bold text-primary-500">0</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const initialCollegeId = Number("<%= initialCollegeId %>") || 0;
+        let colleges = [];
+        let selectedCollegeId = 0;
+
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function setTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach((btn) => {
+                const active = btn.dataset.tab === tabName;
+                btn.classList.toggle('border-primary-500', active);
+                btn.classList.toggle('text-primary-500', active);
+                btn.classList.toggle('font-semibold', active);
+                btn.classList.toggle('border-transparent', !active);
+                btn.classList.toggle('text-gray-500', !active);
+            });
+            document.querySelectorAll('.tab-panel').forEach((panel) => panel.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabName}`);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function renderCollegeStrip() {
+            const container = document.getElementById('college-strip');
+            if (!colleges.length) {
+                container.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No colleges found.</p>';
+                return;
+            }
+            const selected = colleges.find((c) => Number(c.id) === Number(selectedCollegeId));
+            if (!selected) {
+                container.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">Selected college not found.</p>';
+                return;
+            }
+            container.innerHTML = `
+                <span class="px-4 py-2 rounded-full text-sm whitespace-nowrap border bg-primary-500 text-white border-primary-500 font-medium">
+                    ${selected.name}
+                </span>
+            `;
+        }
+
+        function renderSelectedCollege() {
+            const college = colleges.find((c) => Number(c.id) === Number(selectedCollegeId));
+            if (!college) return;
+            const metrics = college.metrics || {};
+
+            document.getElementById('metric-programs').textContent = metrics.programCount || 0;
+            document.getElementById('metric-branches').textContent = metrics.branchCount || 0;
+            document.getElementById('metric-students').textContent = metrics.studentCount || 0;
+            document.getElementById('metric-faculty').textContent = metrics.facultyCount || 0;
+            document.getElementById('academic-programs').textContent = metrics.programCount || 0;
+            document.getElementById('academic-branches').textContent = metrics.branchCount || 0;
+            document.getElementById('users-students').textContent = metrics.studentCount || 0;
+            document.getElementById('users-faculty').textContent = metrics.facultyCount || 0;
+            document.getElementById('content-problems').textContent = metrics.problemCount || 0;
+            document.getElementById('content-contests').textContent = metrics.contestCount || 0;
+
+            const adminList = document.getElementById('college-admin-list');
+            if (!college.admins || !college.admins.length) {
+                adminList.innerHTML = '<p class="text-gray-500 dark:text-gray-400">No active admin assigned.</p>';
+            } else {
+                adminList.innerHTML = college.admins.map((admin) => `
+                    <div class="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-gray-900/30 px-3 py-2">
+                        <span class="font-medium">${admin.fullName}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">${admin.email || ''}</span>
+                    </div>
+                `).join('');
+            }
+
+            renderCollegeStrip();
+        }
+
+        async function loadCollegeManagement() {
+            try {
+                const response = await fetch('/superadmin/api/college-management');
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Failed to load college management data');
+                }
+                colleges = Array.isArray(data.colleges) ? data.colleges : [];
+                selectedCollegeId = colleges.some((c) => Number(c.id) === initialCollegeId)
+                    ? initialCollegeId
+                    : (colleges[0]?.id || 0);
+                if (initialCollegeId && Number(selectedCollegeId) !== Number(initialCollegeId)) {
+                    document.getElementById('college-strip').innerHTML =
+                        '<p class="text-sm text-red-500">Requested college not found.</p>';
+                    return;
+                }
+                renderSelectedCollege();
+            } catch (error) {
+                console.error(error);
+                document.getElementById('college-strip').innerHTML =
+                    '<p class="text-sm text-red-500">Failed to load college data.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.tab-btn').forEach((btn) => {
+                btn.addEventListener('click', () => setTab(btn.dataset.tab));
+            });
+            setTab('overview');
+            loadCollegeManagement();
+        });
+    </script>
+</body>
+</html>
