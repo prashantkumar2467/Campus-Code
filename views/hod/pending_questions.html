@@ -279,17 +279,10 @@
                                             </td>
                                             <td class="px-4 py-5">
                                                 <div class="flex items-center gap-1.5">
-                                                    <button onclick="openViewModal(this)"
-                                                        data-title="<%= q.title %>"
-                                                        data-desc="<%= q.description ? q.description.replace(/"/g, '&quot;') : '' %>"
-                                                        data-input="<%= q.input_format %>"
-                                                        data-output="<%= q.output_format %>"
-                                                        data-constraints="<%= q.constraints %>"
-                                                        data-sample-in="<%= q.sample_input %>"
-                                                        data-sample-out="<%= q.sample_output %>"
+                                                    <a href="/college/hod/problem/view/<%= q.id %>"
                                                         class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-blue-400 hover:bg-slate-700 transition-colors" title="View Details">
                                                         <i class="far fa-eye text-xs"></i>
-                                                    </button>
+                                                    </a>
                                                     <button onclick="openFeedbackModal(this, '<%= q.id %>')" data-comments="<%= q.hod_comments || '' %>" class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-slate-700 transition-colors" title="Message Faculty">
                                                         <i class="far fa-comment-alt text-xs"></i>
                                                     </button>
@@ -587,7 +580,7 @@
             <div class="pt-16 pb-8 px-6">
                 <div class="text-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-1"><%= user.fullName %></h2>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3"><%= user.post || 'Faculty Member' %></p>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2"><%= user.collegeName || 'CampusCode College' %></p>
 
                     <div class="flex items-center justify-center gap-2 flex-wrap">
                         <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-100 dark:border-blue-800">

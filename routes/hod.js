@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const { requireRole } = require('../middleware/auth');
 const { checkScope } = require('../middleware/authMiddleware');
 
@@ -1059,6 +1060,11 @@ module.exports = (db, transporter) => {
                 );
             }
         );
+    });
+
+    // HOD: View Problem (using student view but keeping HOD URL)
+    router.get('/hod/problem/view/:id', requireRole('hod'), (req, res) => {
+        res.sendFile(path.join(__dirname, '..', 'views', 'student', 'problem_page.html'));
     });
 
     // Contest Management

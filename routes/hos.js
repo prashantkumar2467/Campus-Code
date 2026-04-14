@@ -269,7 +269,49 @@ module.exports = (db) => {
         } catch (e) { res.status(500).send(e.message); }
     });
 
-    // Pending Contests Page
+    // Pending Question View (full-page review)
+    router.get('/hos/pending-question/:id', requireRole('hos'), checkScope, async (req, res) => {
+        const problemId = parseInt(req.params.id, 10);
+        if (!problemId) return res.status(400).send('Missing or invalid problem ID.');
+        try {
+            const hosId = req.session.user.id;
+            const college = req.session.user.collegeName;
+            const subjects = await getAssignedSubjects(hosId, college);
+            const facultyIds = await getFacultyUnderHos(hosId, college, subjects);
+
+            const problem = await new Promise((resolve, reject) => {
+                db.get(
+                    `SELECT p.*, u.fullName as facultyName
+                     FROM problems p
+                     LEFT JOIN account_users u ON p.faculty_id = u.id
+                     WHERE p.id = ?`,
+                    [problemId],
+                    (err, row) => err ? reject(err) : resolve(row)
+                );
+            });
+
+            if (!problem) return res.status(404).send('Question not found.');
+
+            // Access check: must belong to HOS's faculty scope or be the HOS's own problem
+            const isOwnProblem = problem.faculty_id === hosId;
+            const isFacultyScope = facultyIds.includes(problem.faculty_id);
+            const isSubjectScope = subjects.length === 0 || subjects.includes(problem.subject);
+            if (!isOwnProblem && !isFacultyScope && !isSubjectScope) {
+                return res.status(403).send('Access denied: This question is outside your scope.');
+            }
+
+            res.render('hos/pending_question_view.html', {
+                user: req.session.user,
+                problem,
+                currentPage: 'pending_questions'
+            });
+        } catch (e) {
+            console.error('HOS pending-question view error:', e);
+            res.status(500).send(e.message);
+        }
+    });
+
+
     router.get('/hos/pending-contests', requireRole('hos'), checkScope, async (req, res) => {
         try {
             const hosId = req.session.user.id;
@@ -344,6 +386,68 @@ module.exports = (db) => {
                 });
             });
         } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+    });
+
+    // Bulk Verify Questions (approve / reject)
+    router.post('/hos/bulk-verify', requireRole('hos'), async (req, res) => {
+        const { questionIds, action } = req.body;
+        const hosId = req.session.user.id;
+
+        if (!Array.isArray(questionIds) || questionIds.length === 0) {
+            return res.status(400).json({ success: false, error: 'No question IDs provided.' });
+        }
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({ success: false, error: 'Invalid action. Must be "approve" or "reject".' });
+        }
+
+        try {
+            const subjects = await getAssignedSubjects(hosId);
+            const newStatus = action === 'approve' ? 'accepted' : 'rejected';
+
+            let successCount = 0;
+            const errors = [];
+
+            for (const rawId of questionIds) {
+                const problemId = parseInt(rawId, 10);
+                if (!problemId) continue;
+
+                await new Promise((resolve) => {
+                    db.get(`SELECT subject FROM problems WHERE id = ?`, [problemId], (err, row) => {
+                        if (err || !row) { errors.push(problemId); return resolve(); }
+                        // Scope check: HOS can approve their own problems or problems in their subjects
+                        if (subjects.length > 0 && !subjects.includes(row.subject)) {
+                            errors.push(problemId); return resolve();
+                        }
+
+                        let updateSql, params;
+                        if (action === 'approve') {
+                            updateSql = `UPDATE problems SET status = ?, hos_verified = 1, is_public = 1, visibility_scope = 'college', scope = 'college' WHERE id = ?`;
+                            params = [newStatus, problemId];
+                        } else {
+                            updateSql = `UPDATE problems SET status = ? WHERE id = ?`;
+                            params = [newStatus, problemId];
+                        }
+
+                        db.run(updateSql, params, function(runErr) {
+                            if (runErr) { errors.push(problemId); } else { successCount++; }
+                            resolve();
+                        });
+                    });
+                });
+            }
+
+            if (successCount === 0) {
+                return res.status(403).json({ success: false, error: 'No questions were updated. Check subject scope permissions.' });
+            }
+
+            const message = `${successCount} question(s) ${action === 'approve' ? 'approved' : 'rejected'} successfully.` +
+                (errors.length ? ` (${errors.length} skipped due to access restrictions)` : '');
+            res.json({ success: true, message });
+
+        } catch (e) {
+            console.error('HOS bulk-verify error:', e);
+            res.status(500).json({ success: false, error: e.message });
+        }
     });
 
     // Approve Contest POST Route
