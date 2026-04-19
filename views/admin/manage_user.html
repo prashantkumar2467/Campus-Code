@@ -1555,7 +1555,10 @@ async function approveSelectedUsers() {
 // ==========================================
 async function fetchRealTimeStats() {
     try {
-        const res = await fetch('/college/api/stats'); // Adjust path if necessary
+        const res = await fetch('/college/stats');
+        if (!res.ok) {
+            throw new Error(`Network response was not ok (Status: ${res.status})`);
+        }
         const data = await res.json();
         
         if (data.success) {
