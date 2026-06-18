@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CampusCode - Public Profile</title>
+    <link rel="icon" href="/campuscode-logo.jpeg" type="image/jpeg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+        .animate-blob {
+            animation: float 6s ease-in-out infinite;
+        }
+        .animate-blob-delayed {
+            animation: float 8s ease-in-out infinite 2s;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+
+    <!-- Decorative background blobs for glassmorphism depth -->
+    <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob-delayed"></div>
+
+    <!-- Main Card Container -->
+    <div id="profile-card" class="w-full max-w-md bg-white/60 backdrop-blur-xl rounded-3xl shadow-[0_8px_32px_0_rgba(148,163,184,0.15)] border border-white/80 p-6 relative z-10 transition-all duration-300 hover:shadow-[0_12px_40px_0_rgba(148,163,184,0.25)]">
+        
+        <!-- Header / Logo Area -->
+        <div class="flex items-center justify-between mb-6 border-b border-slate-200/50 pb-4">
+            <div class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-500">CampusCode</p>
+            </div>
+            <span class="text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-100/50">Public Profile</span>
+        </div>
+
+        <!-- Identity Section -->
+        <div class="flex items-center gap-4 mb-6">
+            <div id="avatar" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-blue-500/20 ring-4 ring-white">
+                U
+            </div>
+            <div class="space-y-0.5">
+                <h2 id="name" class="text-xl font-extrabold text-slate-800 tracking-tight">Loading...</h2>
+                <div class="flex items-center gap-1.5 text-sm text-slate-600">
+                    <i class="fas fa-graduation-cap text-slate-400 text-xs"></i>
+                    <p id="institution" class="font-medium">Independent</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact/Email Field -->
+        <div class="bg-slate-50/80 border border-slate-100 rounded-xl px-4 py-3 mb-6 flex items-center gap-3">
+            <i class="fas fa-envelope text-slate-400"></i>
+            <p id="email" class="text-sm font-medium text-slate-700 break-all"></p>
+        </div>
+
+        <!-- Stats Dashboard Grid -->
+        <div class="grid grid-cols-3 gap-3 text-center mb-5">
+            <div class="bg-white/80 border border-slate-200/60 rounded-2xl p-3 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Solved</div>
+                <div id="solved" class="text-xl font-black text-slate-800">0</div>
+            </div>
+            <div class="bg-white/80 border border-slate-200/60 rounded-2xl p-3 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Rank</div>
+                <div id="rank" class="text-xl font-black text-blue-600">#-</div>
+            </div>
+            <div class="bg-white/80 border border-slate-200/60 rounded-2xl p-3 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Points</div>
+                <div id="points" class="text-xl font-black text-slate-800">0</div>
+            </div>
+        </div>
+
+        <!-- Dynamic Meta Info Links -->
+        <div id="extra" class="text-sm text-slate-600 space-y-2.5 border-t border-slate-200/50 pt-4 empty:hidden"></div>
+    </div>
+
+    <!-- Script Handling Logic -->
+    <script>
+        (async function loadProfile() {
+            try {
+                const id = window.location.pathname.split('/').pop();
+                const resp = await fetch(`/individual/api/public-profile/${encodeURIComponent(id)}`);
+                const data = await resp.json();
+                if (!resp.ok || !data.success) throw new Error(data.error || 'Unable to load profile');
+                const p = data.profile || {};
+                
+                const initials = String(p.fullName || 'U').split(' ').filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase() || 'U';
+                document.getElementById('avatar').textContent = initials;
+                document.getElementById('name').textContent = p.fullName || 'Individual';
+                document.getElementById('institution').textContent = p.institution || 'Independent';
+                document.getElementById('email').textContent = p.email || '';
+                document.getElementById('solved').textContent = String(Number(p.solved || 0));
+                document.getElementById('rank').textContent = p.globalRank || '#-';
+                document.getElementById('points').textContent = String(Number(p.points || 0));
+                
+                const extra = [];
+                if (p.location) {
+                    extra.push(`<div class="flex items-center gap-2.5 text-slate-600 font-medium"><i class="fas fa-location-dot text-slate-400 w-4 text-center"></i><span>${p.location}</span></div>`);
+                }
+                if (p.github) {
+                    extra.push(`<div class="flex items-center gap-2.5 font-medium"><i class="fab fa-github text-slate-800 w-4 text-center"></i><a href="${p.github}" class="text-blue-600 hover:text-blue-800 hover:underline transition-colors break-all" target="_blank" rel="noopener noreferrer">${p.github}</a></div>`);
+                }
+                document.getElementById('extra').innerHTML = extra.join('');
+            } catch (_e) {
+                // Beautifully integrated error fallback UI replacing the standard layout
+                document.getElementById('profile-card').innerHTML = `
+                    <div class="text-center py-8 px-4">
+                        <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                            <i class="fas fa-user-slash text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">Profile Not Available</h3>
+                        <p class="text-sm text-slate-500 max-w-xs mx-auto">We couldn't retrieve this profile details. It may have been moved or removed.</p>
+                    </div>
+                `;
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -312,7 +312,7 @@
             <div class="bg-[#1E4A7A] dark:bg-[#0f2a4a] relative pt-8 pb-16 px-6 text-center">
                 <button id="closeProfileOverlay" class="absolute top-4 right-4 text-white/70 hover:text-white"><i class="fas fa-times text-lg"></i></button>
                 <div class="absolute top-4 left-4">
-                     <button class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20"><i class="fas fa-qrcode text-xs"></i></button>
+                     <button id="openQrShareBtn" class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20"><i class="fas fa-qrcode text-xs"></i></button>
                 </div>
                 <div class="absolute left-1/2 bottom-[-45px] -translate-x-1/2">
                     <div class="w-24 h-24 rounded-full bg-[#1E4A7A] p-1"> 
@@ -343,6 +343,7 @@
                 <div class="h-px bg-gray-100 dark:bg-gray-700 my-6"></div>
                 <div class="space-y-1">
                     <a href="profile.html" class="nav-item"><i class="fas fa-id-card"></i><span>My Profile </span></a>
+                    <a data-public-profile-link href="/individual/public-profile" class="nav-item"><i class="fas fa-globe"></i><span>Public Profile</span></a>
                     <a href="edit-profile.html" class="nav-item"><i class="fas fa-pen"></i><span>Edit profile</span></a>
                     <a href="reports.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>Report</span></a>
                     <a href="stats.html" class="nav-item"><i class="fas fa-list"></i><span>Stats</span></a>
@@ -353,6 +354,24 @@
                         <span class="text-sm font-medium text-red-600 dark:text-red-400">Log out</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div id="qrShareModal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Share Profile</h3>
+                <button id="closeQrShareBtn" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-gray-200 mx-auto w-fit">
+                <img id="qrProfileImage" src="" alt="Profile QR" class="w-56 h-56" />
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-3 break-all" id="shareProfileUrlText"></p>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+                <button id="copyProfileLinkBtn" class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-sm font-medium">Copy Link</button>
+                <button id="nativeShareProfileBtn" class="px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium">Share</button>
             </div>
         </div>
     </div>
@@ -571,9 +590,70 @@
             const overlay = document.getElementById("profileOverlay");
             const headerProfileBtn = document.getElementById("headerProfileBtn");
             const closeBtn = document.getElementById("closeProfileOverlay");
+            const openQrShareBtn = document.getElementById("openQrShareBtn");
+            const qrShareModal = document.getElementById("qrShareModal");
+            const closeQrShareBtn = document.getElementById("closeQrShareBtn");
+            const qrProfileImage = document.getElementById("qrProfileImage");
+            const shareProfileUrlText = document.getElementById("shareProfileUrlText");
+            const copyProfileLinkBtn = document.getElementById("copyProfileLinkBtn");
+            const nativeShareProfileBtn = document.getElementById("nativeShareProfileBtn");
+            let shareProfileUrl = '';
             if(headerProfileBtn && overlay) headerProfileBtn.addEventListener("click", () => overlay.classList.remove("hidden"));
             if(closeBtn && overlay) closeBtn.addEventListener("click", () => overlay.classList.add("hidden"));
             if(overlay) overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.add("hidden"); });
+            if (openQrShareBtn && qrShareModal) {
+                openQrShareBtn.addEventListener('click', () => {
+                    if (!shareProfileUrl) return;
+                    if (qrProfileImage) {
+                        qrProfileImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(shareProfileUrl)}`;
+                    }
+                    if (shareProfileUrlText) shareProfileUrlText.textContent = shareProfileUrl;
+                    qrShareModal.classList.remove('hidden');
+                    qrShareModal.classList.add('flex');
+                });
+            }
+            if (closeQrShareBtn && qrShareModal) {
+                closeQrShareBtn.addEventListener('click', () => {
+                    qrShareModal.classList.add('hidden');
+                    qrShareModal.classList.remove('flex');
+                });
+            }
+            if (qrShareModal) {
+                qrShareModal.addEventListener('click', (e) => {
+                    if (e.target === qrShareModal) {
+                        qrShareModal.classList.add('hidden');
+                        qrShareModal.classList.remove('flex');
+                    }
+                });
+            }
+            if (copyProfileLinkBtn) {
+                copyProfileLinkBtn.addEventListener('click', async () => {
+                    if (!shareProfileUrl) return;
+                    try {
+                        await navigator.clipboard.writeText(shareProfileUrl);
+                        copyProfileLinkBtn.textContent = 'Copied';
+                        setTimeout(() => { copyProfileLinkBtn.textContent = 'Copy Link'; }, 1200);
+                    } catch (_e) {}
+                });
+            }
+            if (nativeShareProfileBtn) {
+                nativeShareProfileBtn.addEventListener('click', async () => {
+                    if (!shareProfileUrl) return;
+                    try {
+                        if (navigator.share) {
+                            await navigator.share({
+                                title: 'CampusCode Profile',
+                                text: 'Check my CampusCode profile',
+                                url: shareProfileUrl
+                            });
+                            return;
+                        }
+                        await navigator.clipboard.writeText(shareProfileUrl);
+                        nativeShareProfileBtn.textContent = 'Copied';
+                        setTimeout(() => { nativeShareProfileBtn.textContent = 'Share'; }, 1200);
+                    } catch (_e) {}
+                });
+            }
 
             const notifBtn = document.getElementById('notificationBtn');
             const notifDropdown = document.getElementById('notificationDropdown');
@@ -777,6 +857,16 @@
                     const overlayRank = document.getElementById('overlayRank');
                     const overlayPoints = document.getElementById('overlayPoints');
                     const initials = String(d.user.fullName || 'U').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || 'U';
+                    const profileId = Number(d.user.id || 0);
+                    if (profileId > 0) {
+                        shareProfileUrl = `${window.location.origin}/individual/public-profile/${profileId}`;
+                    } else {
+                        shareProfileUrl = '';
+                    }
+                    const publicProfileLink = document.querySelector('[data-public-profile-link]');
+                    if (publicProfileLink && profileId > 0) {
+                        publicProfileLink.href = `/individual/public-profile/${profileId}`;
+                    }
                     if (headerName) headerName.textContent = d.user.fullName || 'Individual';
                     if (headerAvatar) headerAvatar.textContent = initials;
                     if (overlayName) overlayName.textContent = d.user.fullName || 'Individual';

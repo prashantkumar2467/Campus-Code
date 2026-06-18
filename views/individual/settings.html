@@ -418,6 +418,7 @@
                 <div class="h-px bg-gray-100 dark:bg-gray-700 my-6"></div>
                 <div class="space-y-1">
                     <a href="/individual/profile" class="nav-item"><i class="fas fa-id-card"></i><span>My Profile</span></a>
+                    <a data-public-profile-link href="/individual/public-profile" class="nav-item"><i class="fas fa-globe"></i><span>Public Profile</span></a>
                     <a href="/individual/profile" class="nav-item"><i class="fas fa-pen"></i><span>Edit Profile</span></a>
                     <a href="/individual/report" class="nav-item"><i class="fas fa-chart-pie"></i><span>Report</span></a>
                     <a href="/individual/stats" class="nav-item"><i class="fas fa-list"></i><span>Stats</span></a>
@@ -515,6 +516,8 @@
                     if (overlaySolved) overlaySolved.textContent = String(user.solvedCount ?? 0);
                     if (overlayRank) overlayRank.textContent = String(user.globalRank ?? '#-');
                     if (overlayPoints) overlayPoints.textContent = String(user.points ?? 0);
+                    const publicProfileLink = document.querySelector('[data-public-profile-link]');
+                    if (publicProfileLink && user.id) publicProfileLink.href = `/individual/public-profile/${user.id}`;
                 }
             } catch (err) {
                 console.error("Error fetching settings:", err);

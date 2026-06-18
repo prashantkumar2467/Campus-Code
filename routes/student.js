@@ -653,7 +653,29 @@ const GLOBAL_SOLVE_WEIGHT_FOR_COLLEGE_RANK = 0.3;
                     LIMIT 10
                 `, [userId])
             ]);
-            const displayUser = await buildDisplayUser(sessionUser, userRow, solvedDifficultyCounts);
+            const submissionSummary = submissionRows.reduce((acc, row) => {
+                acc.attempted += 1;
+                if (String(row.status || '').toLowerCase() === 'accepted') {
+                    acc.accepted += 1;
+                    acc.points += Number(row.points_earned || 0);
+                }
+                return acc;
+            }, { attempted: 0, accepted: 0, points: 0 });
+            const acceptedProblemCountRow = await dbGet(`
+                SELECT COUNT(DISTINCT s.problem_id) as solved
+                FROM submissions s
+                WHERE s.user_id = ? AND LOWER(COALESCE(s.status, '')) IN ('accepted', 'ac', 'pass')
+            `, [userId]);
+            const solvedFromSubmissions = Number(acceptedProblemCountRow?.solved || submissionSummary.accepted || 0);
+            const pointsFromSubmissions = Number(submissionSummary.points || 0);
+
+            const displayUser = await buildDisplayUser(sessionUser, {
+                ...userRow,
+                solvedCount: Math.max(Number(userRow?.solvedCount || 0), solvedFromSubmissions),
+                points: Math.max(Number(userRow?.points || 0), pointsFromSubmissions)
+            }, solvedDifficultyCounts);
+            displayUser.problems_solved = Math.max(Number(displayUser.problems_solved || 0), solvedFromSubmissions);
+            displayUser.xp = Math.max(Number(displayUser.xp || 0), pointsFromSubmissions);
             const contestRows = [];
             for (const row of joinedContestRows) {
                 if (!isContestVisibleToStudent(row, sessionUser)) continue;
@@ -742,8 +764,8 @@ const GLOBAL_SOLVE_WEIGHT_FOR_COLLEGE_RANK = 0.3;
                     proficiency: solved >= 8 ? 'Expert' : solved >= 4 ? 'Advanced' : solved >= 2 ? 'Intermediate' : 'Beginner'
                 }));
 
-            const attemptedCount = submissionRows.length;
-            const acceptedCount = submissionRows.filter(row => row.status === 'accepted').length;
+            const attemptedCount = submissionSummary.attempted;
+            const acceptedCount = submissionSummary.accepted;
             const accuracy = attemptedCount ? ((acceptedCount / attemptedCount) * 100).toFixed(1) : '0.0';
             const facultyRemark = acceptedCount >= 15
                 ? 'Strong consistency and a healthy solve volume. Keep pushing on medium and hard problems to improve interview readiness.'

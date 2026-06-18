@@ -94,6 +94,31 @@ module.exports = (db) => {
         }
         return null;
     };
+    const resolveIndividualById = async (userIdRaw) => {
+        const userId = Number(userIdRaw);
+        if (!Number.isInteger(userId) || userId <= 0) return null;
+        const fromStudent = await dbGet(`
+            SELECT id, fullName, email, points, solvedCount, rank, role, status,
+                   program, branch, year, section, github_link, location
+            FROM student
+            WHERE id = ?
+              AND LOWER(COALESCE(role, '')) = 'individual'
+            LIMIT 1
+        `, [userId]);
+        if (fromStudent) return fromStudent;
+
+        const fromUsers = await dbGet(`
+            SELECT id, fullName, email, points, solvedCount, rank, role, status,
+                   program, branch, year, section, github_link, location
+            FROM users
+            WHERE id = ?
+              AND LOWER(COALESCE(role, '')) = 'individual'
+            LIMIT 1
+        `, [userId]);
+        if (fromUsers) return fromUsers;
+
+        return null;
+    };
 
     const ensureProfileColumns = async () => {
         if (profileColumnsEnsured) return;
@@ -235,6 +260,47 @@ module.exports = (db) => {
     router.get('/support.html', requireIndividual, (req, res) => res.redirect('/individual/support'));
     router.get('/settings', requireIndividual, serve('settings.html'));
     router.get('/settings.html', requireIndividual, (req, res) => res.redirect('/individual/settings'));
+
+    router.get('/public-profile/:id', async (req, res) => {
+        try {
+            const user = await resolveIndividualById(req.params.id);
+            if (!user) return res.status(404).send('Profile not found');
+            return res.sendFile(path.join(__dirname, '../views/individual', 'public-profile.html'));
+        } catch (error) {
+            return res.status(500).send('Unable to load public profile');
+        }
+    });
+    router.get('/api/public-profile/:id', async (req, res) => {
+        try {
+            const user = await resolveIndividualById(req.params.id);
+            if (!user) return res.status(404).json({ success: false, error: 'Profile not found' });
+            const points = Number(user.points || 0);
+            const solved = Number(user.solvedCount || 0);
+            const globalHigher = await dbGet(`
+                SELECT COUNT(*) as cnt
+                FROM account_users
+                WHERE LOWER(COALESCE(role, '')) IN ('student', 'individual')
+                  AND COALESCE(points, 0) > ?
+            `, [points]);
+            const globalRank = Number(globalHigher?.cnt || 0) + 1;
+            return res.json({
+                success: true,
+                profile: {
+                    id: Number(user.id),
+                    fullName: user.fullName || 'Individual',
+                    email: user.email || '',
+                    institution: 'Independent',
+                    points,
+                    solved,
+                    globalRank: `#${globalRank}`,
+                    github: user.github_link || '',
+                    location: user.location || ''
+                }
+            });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'Unable to fetch profile' });
+        }
+    });
 
 
 
@@ -396,6 +462,7 @@ module.exports = (db) => {
                 success: true,
                 dashboard: {
                     user: {
+                        id: userId,
                         fullName: user.fullName || 'Individual',
                         email: user.email || '',
                         solved,
@@ -432,8 +499,18 @@ module.exports = (db) => {
             const user = resolvedUser;
             if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
-            const points = Number(user.points || 0);
-            const solved = Number(user.solvedCount || 0);
+            const submissionSummary = await dbGet(`
+                SELECT
+                    COUNT(*) as attempted,
+                    SUM(CASE WHEN LOWER(COALESCE(status, '')) IN ('accepted', 'ac', 'pass') THEN 1 ELSE 0 END) as accepted,
+                    SUM(CASE WHEN LOWER(COALESCE(status, '')) IN ('accepted', 'ac', 'pass') THEN COALESCE(points_earned, 0) ELSE 0 END) as points_earned
+                FROM submissions
+                WHERE user_id = ?
+            `, [userId]);
+            const solvedBySubmissions = Number(submissionSummary?.accepted || 0);
+            const pointsFromSubmissions = Number(submissionSummary?.points_earned || 0);
+            const points = Math.max(Number(user.points || 0), pointsFromSubmissions);
+            const solved = Math.max(Number(user.solvedCount || 0), solvedBySubmissions);
             const globalHigher = await dbGet(`
                 SELECT COUNT(*) as cnt
                 FROM account_users
@@ -442,15 +519,8 @@ module.exports = (db) => {
             `, [points]);
             const globalRank = Number(globalHigher?.cnt || 0) + 1;
 
-            const submissionTotals = await dbGet(`
-                SELECT
-                    COUNT(*) as attempted,
-                    SUM(CASE WHEN LOWER(COALESCE(status, '')) IN ('accepted', 'ac', 'pass') THEN 1 ELSE 0 END) as accepted
-                FROM submissions
-                WHERE user_id = ?
-            `, [userId]);
-            const attempted = Number(submissionTotals?.attempted || 0);
-            const accepted = Number(submissionTotals?.accepted || 0);
+            const attempted = Number(submissionSummary?.attempted || 0);
+            const accepted = Number(submissionSummary?.accepted || 0);
             const accuracy = attempted ? ((accepted / attempted) * 100).toFixed(1) : '0.0';
 
             const difficultyRows = await dbAll(`
@@ -475,20 +545,20 @@ module.exports = (db) => {
 
             const topicRows = await dbAll(`
                 SELECT
-                    TRIM(value) as topic,
+                    TRIM(BOTH '"' FROM TRIM(tag.value)) as topic,
                     COUNT(*) as solved
                 FROM submissions s
                 JOIN problems p ON p.id = s.problem_id
-                JOIN json_each(
-                    CASE
-                        WHEN p.tags IS NULL OR TRIM(p.tags) = '' THEN '[]'
-                        WHEN substr(TRIM(p.tags), 1, 1) = '[' THEN p.tags
-                        ELSE '[]'
-                    END
-                )
+                CROSS JOIN LATERAL unnest(
+                    string_to_array(
+                        regexp_replace(COALESCE(NULLIF(p.tags, ''), ''), '^\\[|\\]$', '', 'g'),
+                        ','
+                    )
+                ) AS tag(value)
                 WHERE s.user_id = ?
                   AND LOWER(COALESCE(s.status, '')) IN ('accepted', 'ac', 'pass')
-                GROUP BY TRIM(value)
+                  AND TRIM(BOTH '"' FROM TRIM(tag.value)) <> ''
+                GROUP BY TRIM(BOTH '"' FROM TRIM(tag.value))
                 ORDER BY solved DESC, topic ASC
                 LIMIT 6
             `, [userId]);
@@ -838,20 +908,20 @@ module.exports = (db) => {
             // 3. Extract live topics accurately, handling both JSON and comma-separated formats
             const topicRows = await dbAll(`
                 SELECT
-                    TRIM(value) as topic,
+                    TRIM(BOTH '"' FROM TRIM(tag.value)) as topic,
                     COUNT(DISTINCT p.id) as solved
                 FROM submissions s
                 JOIN problems p ON p.id = s.problem_id
-                JOIN json_each(
-                    CASE
-                        WHEN p.tags IS NULL OR TRIM(p.tags) = '' THEN '[]'
-                        WHEN substr(TRIM(p.tags), 1, 1) = '[' THEN p.tags
-                        ELSE '["' || REPLACE(TRIM(p.tags), ',', '","') || '"]'
-                    END
-                )
+                CROSS JOIN LATERAL unnest(
+                    string_to_array(
+                        regexp_replace(COALESCE(NULLIF(p.tags, ''), ''), '^\\[|\\]$', '', 'g'),
+                        ','
+                    )
+                ) AS tag(value)
                 WHERE s.user_id = ?
                   AND LOWER(COALESCE(s.status, '')) IN ('accepted', 'ac', 'pass')
-                GROUP BY TRIM(value)
+                  AND TRIM(BOTH '"' FROM TRIM(tag.value)) <> ''
+                GROUP BY TRIM(BOTH '"' FROM TRIM(tag.value))
                 ORDER BY solved DESC, topic ASC
                 LIMIT 6
             `, [userId]);

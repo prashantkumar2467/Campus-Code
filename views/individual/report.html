@@ -354,6 +354,7 @@
                 <div class="h-px bg-gray-100 dark:bg-gray-700 my-6"></div>
                 <div class="space-y-1">
                     <a href="profile.html" class="nav-item"><i class="fas fa-id-card"></i><span>My Profile </span></a>
+                    <a data-public-profile-link href="/individual/public-profile" class="nav-item"><i class="fas fa-globe"></i><span>Public Profile</span></a>
                     <a href="edit-profile.html" class="nav-item"><i class="fas fa-pen"></i><span>Edit profile</span></a>
                     <a href="reports.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>Report</span></a>
                     <a href="stats.html" class="nav-item"><i class="fas fa-list"></i><span>Stats</span></a>
@@ -467,6 +468,8 @@
           set('overlaySolved', String(Number(r.user.solved || 0)));
           set('overlayRank', r.user.rank || '#-');
           set('overlayPoints', formatPoints(r.user.points));
+          const publicProfileLink = document.querySelector('[data-public-profile-link]');
+          if (publicProfileLink && r.user.id) publicProfileLink.href = `/individual/public-profile/${r.user.id}`;
           const overlayAvatar = document.getElementById('overlayAvatar');
           if (overlayAvatar) overlayAvatar.textContent = initials;
         } catch (err) {
